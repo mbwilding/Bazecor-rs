@@ -4,6 +4,7 @@ use log::{debug, error, trace};
 use regex::Regex;
 use semver::{Version, VersionReq};
 use serde::Deserialize;
+use std::fmt::Display;
 use tokio::join;
 
 const FW_MAJOR_VERSION: &str = "1.x";
@@ -14,6 +15,12 @@ pub struct FirmwareRelease {
     pub version: String,
     pub body: String,
     pub assets: Vec<FirmwareAsset>,
+}
+
+impl Display for FirmwareRelease {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.name, self.version)
+    }
 }
 
 #[derive(Debug)]
@@ -74,14 +81,10 @@ fn parse_version(version_str: &str) -> Version {
 pub async fn github_read(context: Ctx) -> Result<GitHubInfo> {
     let fw_major_version_req = VersionReq::parse(FW_MAJOR_VERSION)?;
 
-    let mut final_releases = Vec::new();
-    let mut is_updated = false;
-    let mut is_beta = false;
-
     let fw_releases =
         load_available_firmware_versions(!context.device.bootloader && context.allow_beta).await?;
 
-    final_releases = fw_releases
+    let mut final_releases = fw_releases
         .into_iter()
         .filter(|release| {
             release.name == context.device.info.product.to_string() && {
@@ -91,7 +94,7 @@ pub async fn github_read(context: Ctx) -> Result<GitHubInfo> {
                 true
             }
         })
-        .collect();
+        .collect::<Vec<_>>();
 
     if final_releases.is_empty() {
         let msg = "No GitHub firmware releases found";
@@ -109,8 +112,8 @@ pub async fn github_read(context: Ctx) -> Result<GitHubInfo> {
         });
     }
 
-    is_updated = context.collected.version == final_releases[0].version;
-    is_beta = context.collected.version.contains("beta");
+    let is_updated = context.collected.version == final_releases[0].version;
+    let is_beta = context.collected.version.contains("beta");
 
     Ok(GitHubInfo {
         firmwares: final_releases,
@@ -165,11 +168,8 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
 pub async fn download_firmware(
     type_selected: &str,
     info: &Hardware,
-    firmware_list: &Vec<FirmwareRelease>,
-    selected_firmware: usize,
+    firmware_release: &FirmwareRelease,
 ) -> Result<Firmware> {
-    let firmware_release = &firmware_list[selected_firmware];
-
     if type_selected == "default" {
         match info.info.product {
             Product::Raise => {
