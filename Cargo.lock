@@ -67,6 +67,7 @@ name = "api"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "dygma_focus",
  "hex",
  "log",
  "regex",
