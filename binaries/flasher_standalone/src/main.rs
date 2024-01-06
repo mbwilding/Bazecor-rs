@@ -9,7 +9,7 @@ use tracing::{debug, error, info};
 async fn main() -> Result<()> {
     logger::init();
 
-    let devices = dygma_focus::Focus::find_all_keyboards()?;
+    let devices = dygma_focus::Focus::find_all_devices()?;
     let device = match devices.len() {
         0 => {
             error!("No devices found, please connect a device and try again");

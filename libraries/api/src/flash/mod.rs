@@ -1,7 +1,7 @@
 pub mod types;
 
 use anyhow::{bail, Context, Result};
-use dygma_focus::hardware::{Hardware, KeyboardType, Product};
+use dygma_focus::hardware::{DeviceType, Hardware, Product};
 use log::{debug, error, trace};
 use regex::Regex;
 use semver::{Version, VersionReq};
@@ -189,8 +189,8 @@ pub async fn download_firmware(
                     sides: None,
                 });
             }
-            _ => match hardware.info.keyboard_type {
-                KeyboardType::Wireless => {
+            _ => match hardware.info.device_type {
+                DeviceType::Wireless => {
                     let file_type_fw = "Wireless_neuron.hex";
                     let matched = firmware_release
                         .assets
@@ -205,7 +205,7 @@ pub async fn download_firmware(
                         sides: None,
                     });
                 }
-                KeyboardType::Wired => {
+                DeviceType::Wired => {
                     let file_type_fw = "Wired_neuron.uf2";
                     let matched_fw = firmware_release
                         .assets
@@ -230,7 +230,7 @@ pub async fn download_firmware(
                         sides: Some(sides?),
                     });
                 }
-                _ => bail!("Invalid keyboard type"),
+                _ => bail!("Invalid device type"),
             },
         }
     }

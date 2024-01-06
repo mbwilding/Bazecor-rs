@@ -132,7 +132,7 @@ pub struct Url {
 pub struct Info {
     pub vendor: Vendor,
     pub product: Product,
-    pub keyboard_type: KeyboardType,
+    pub device_type: DeviceType,
     pub display_name: &'static str,
     pub urls: Urls,
 }
@@ -162,7 +162,7 @@ impl Display for Product {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum KeyboardType {
+pub enum DeviceType {
     Wired,
     Wireless,
     ISO,

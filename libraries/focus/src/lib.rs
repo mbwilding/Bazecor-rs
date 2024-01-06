@@ -22,8 +22,8 @@ pub struct Focus {
 
 /// Constructors
 impl Focus {
-    /// Find all supported keyboards.
-    pub fn find_all_keyboards() -> Result<Vec<Device>> {
+    /// Find all supported devices.
+    pub fn find_all_devices() -> Result<Vec<Device>> {
         let ports = match tokio_serial::available_ports() {
             Ok(ports) => ports,
             Err(e) => {
@@ -72,9 +72,9 @@ impl Focus {
         Ok(devices)
     }
 
-    /// Find the first supported keyboard.
-    pub fn find_first_keyboard() -> Result<Device> {
-        let devices = match Self::find_all_keyboards() {
+    /// Find the first supported device.
+    pub fn find_first_device() -> Result<Device> {
+        let devices = match Self::find_all_devices() {
             Ok(devices) => devices,
             Err(e) => {
                 let err_msg = format!("No device found: {:?}", e);
@@ -83,16 +83,16 @@ impl Focus {
             }
         };
 
-        let keyboard = devices.into_iter().nth(0).ok_or_else(|| {
-            let err_msg = "No supported keyboards found";
+        let device = devices.into_iter().nth(0).ok_or_else(|| {
+            let err_msg = "No supported devices found";
             error!("{}", err_msg);
             anyhow!(err_msg)
         })?;
 
-        Ok(keyboard)
+        Ok(device)
     }
 
-    /// Creates a new instance of the Focus API, connecting to the keyboard via port.
+    /// Creates a new instance of the Focus API, connecting to the device via the named serial port.
     pub async fn new_via_port(port: &str) -> Result<Self> {
         let port_settings = tokio_serial::new(port, 115_200)
             .data_bits(tokio_serial::DataBits::Eight)
@@ -120,15 +120,15 @@ impl Focus {
         })
     }
 
-    /// Creates a new instance of the Focus API, connecting to the keyboard via keyboard struct.
-    pub async fn new_via_hardware(device: &Device) -> Result<Self> {
+    /// Creates a new instance of the Focus API, connecting to the device via a reference to the device struct.
+    pub async fn new_via_device(device: &Device) -> Result<Self> {
         Self::new_via_port(&device.serial_port).await
     }
 
-    /// Creates a new instance of the Focus API, connecting to the keyboard via first available keyboard.
+    /// Creates a new instance of the Focus API, connecting to the device via first available device.
     pub async fn new_first_available() -> Result<Self> {
-        Self::new_via_hardware(Self::find_all_keyboards()?.first().ok_or_else(|| {
-            let err_msg = "No supported keyboards found";
+        Self::new_via_device(Self::find_all_devices()?.first().ok_or_else(|| {
+            let err_msg = "No supported devices found";
             error!("{}", err_msg);
             anyhow!(err_msg)
         })?)

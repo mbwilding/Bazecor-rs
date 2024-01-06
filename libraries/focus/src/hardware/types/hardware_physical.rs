@@ -19,7 +19,7 @@ pub const DEFY_WIRED: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Defy,
-            keyboard_type: KeyboardType::Wired,
+            device_type: DeviceType::Wired,
             display_name: "Dygma Defy Wired",
             urls: Urls {
                 homepage: Url {
@@ -56,7 +56,7 @@ pub const DEFY_WIRED_BOOTLOADER: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Defy,
-            keyboard_type: KeyboardType::Wired,
+            device_type: DeviceType::Wired,
             display_name: "Dygma Defy Wired (Bootloader)",
             urls: Urls {
                 homepage: Url {
@@ -87,7 +87,7 @@ pub const DEFY_WIRELESS: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Defy,
-            keyboard_type: KeyboardType::Wireless,
+            device_type: DeviceType::Wireless,
             display_name: "Dygma Defy Wireless",
             urls: Urls {
                 homepage: Url {
@@ -124,7 +124,7 @@ pub const DEFY_WIRELESS_BOOTLOADER: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Defy,
-            keyboard_type: KeyboardType::Wireless,
+            device_type: DeviceType::Wireless,
             display_name: "Dygma Defy Wireless (Bootloader)",
             urls: Urls {
                 homepage: Url {
@@ -155,7 +155,7 @@ pub const RAISE_ANSI: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Raise,
-            keyboard_type: KeyboardType::ANSI,
+            device_type: DeviceType::ANSI,
             display_name: "Dygma Raise ANSI",
             urls: Urls {
                 homepage: Url {
@@ -192,7 +192,7 @@ pub const RAISE_ANSI_BOOTLOADER: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Raise,
-            keyboard_type: KeyboardType::ANSI,
+            device_type: DeviceType::ANSI,
             display_name: "Dygma Raise ANSI (Bootloader)",
             urls: Urls {
                 homepage: Url {
@@ -223,7 +223,7 @@ pub const RAISE_ISO: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Raise,
-            keyboard_type: KeyboardType::ISO,
+            device_type: DeviceType::ISO,
             display_name: "Dygma Raise ISO",
             urls: Urls {
                 homepage: Url {
@@ -260,7 +260,7 @@ pub const RAISE_ISO_BOOTLOADER: Hardware = {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Raise,
-            keyboard_type: KeyboardType::ISO,
+            device_type: DeviceType::ISO,
             display_name: "Dygma Raise ISO (Bootloader)",
             urls: Urls {
                 homepage: Url {
