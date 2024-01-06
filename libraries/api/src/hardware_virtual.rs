@@ -1,7 +1,7 @@
 use crate::hardware::*;
 
 pub const DEFY_WIRED_VIRTUAL: Hardware = {
-    let hardware = Hardware {
+    Hardware {
         info: Info {
             vendor: Vendor::Dygma,
             product: Product::Defy,
@@ -272,8 +272,7 @@ pub const DEFY_WIRED_VIRTUAL: Hardware = {
             wireless_rf_channel_hop: None,
             wireless_rf_sync_pairing: None,
         }),
-    };
-    hardware
+    }
 };
 
 pub const DEFY_WIRELESS_VIRTUAL: Hardware = {
