@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Flasher" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --bin flasher-standalone" />
+    <option name="command" value="run --bin flasher_standalone" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />

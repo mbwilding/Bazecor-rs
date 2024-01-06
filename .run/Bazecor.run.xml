@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Bazecor-Tauri" type="js.build_tools.npm">
-    <package-json value="$PROJECT_DIR$/binaries/bazecor-tauri/package.json" />
+  <configuration default="false" name="Bazecor" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/binaries/bazecor/package.json" />
     <command value="run" />
     <scripts>
       <script value="tauri" />

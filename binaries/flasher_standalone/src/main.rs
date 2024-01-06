@@ -2,7 +2,7 @@ mod prompts;
 
 use crate::prompts::*;
 use anyhow::Result;
-use tracing::info;
+use tracing::debug;
 use tracing_subscriber::filter::EnvFilter;
 
 #[tokio::main]
@@ -15,9 +15,9 @@ async fn main() -> Result<()> {
     let hardware = ask_hardware();
     let firmware_releases = api::flash::load_available_firmware_versions(allow_beta).await?;
     let firmware_release = ask_firmware(firmware_releases, &hardware);
-    info!("Release Notes\n{}", &firmware_release.body);
+    debug!("Release Notes\n{}", &firmware_release.body);
     let _firmware = api::flash::download_firmware("default", &hardware, &firmware_release).await?;
-    info!("Firmware downloaded successfully");
+    debug!("Firmware downloaded successfully");
 
     Ok(())
 }

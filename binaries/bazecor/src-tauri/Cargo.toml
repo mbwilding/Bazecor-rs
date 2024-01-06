@@ -1,5 +1,5 @@
 [package]
-name = "bazecor-tauri"
+name = "bazecor"
 version = "0.1.0"
 description = "Bazecor"
 authors = ["Matthew Wilding <mbwilding@gmail.com>"]
