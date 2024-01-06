@@ -1,6 +1,6 @@
 use crate::hardware::Pair;
 use anyhow::{anyhow, bail, Result};
-use log::{debug, error};
+use log::{error, trace};
 use std::str;
 use std::time::Duration;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialPortType, SerialStream};
@@ -33,7 +33,7 @@ impl Focus {
             }
         };
 
-        debug!("Available serial ports: {:?}", ports);
+        trace!("Available serial ports: {:?}", ports);
 
         let pairs: Vec<Pair> = ports
             .into_iter()
@@ -67,7 +67,7 @@ impl Focus {
             .flatten()
             .collect();
 
-        debug!("Found keyboards: {:?}", pairs);
+        trace!("Found keyboards: {:?}", pairs);
 
         Ok(pairs)
     }

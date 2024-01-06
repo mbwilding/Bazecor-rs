@@ -7,7 +7,9 @@
     </scripts>
     <arguments value="dev" />
     <node-interpreter value="project" />
-    <envs />
+    <envs>
+      <env name="RUST_LOG" value="debug,hyper=off,reqwest=off,mio_serial=off" />
+    </envs>
     <method v="2" />
   </configuration>
 </component>
