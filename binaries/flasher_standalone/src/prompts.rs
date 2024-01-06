@@ -1,6 +1,6 @@
 use anyhow::Result;
 use api::flash::FirmwareRelease;
-use dygma_focus::hardware::{Hardware, Pair};
+use dygma_focus::hardware::{Device, Hardware};
 use inquire::{Confirm, Select};
 
 pub fn ask_beta() -> Result<bool> {
@@ -10,7 +10,7 @@ pub fn ask_beta() -> Result<bool> {
         .prompt()?)
 }
 
-pub fn ask_connected_device(options: Vec<Pair>) -> Result<Pair> {
+pub fn ask_connected_device(options: Vec<Device>) -> Result<Device> {
     Ok(Select::new("Which connected device?", options)
         .with_help_message("Select the connected device")
         .prompt()?)

@@ -3,12 +3,12 @@ pub mod types;
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone)]
-pub struct Pair {
+pub struct Device {
     pub hardware: Hardware,
     pub serial_port: String,
 }
 
-impl Display for Pair {
+impl Display for Device {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "{}", self.hardware.info.display_name)
     }

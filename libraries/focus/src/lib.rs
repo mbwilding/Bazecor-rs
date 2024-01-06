@@ -1,4 +1,4 @@
-use crate::hardware::Pair;
+use crate::hardware::Device;
 use anyhow::{anyhow, bail, Result};
 use log::{error, trace};
 use std::str;
@@ -23,7 +23,7 @@ pub struct Focus {
 /// Constructors
 impl Focus {
     /// Find all supported keyboards.
-    pub fn find_all_keyboards() -> Result<Vec<Pair>> {
+    pub fn find_all_keyboards() -> Result<Vec<Device>> {
         let ports = match tokio_serial::available_ports() {
             Ok(ports) => ports,
             Err(e) => {
@@ -35,18 +35,18 @@ impl Focus {
 
         trace!("Available serial ports: {:?}", ports);
 
-        let pairs: Vec<Pair> = ports
+        let devices: Vec<Device> = ports
             .into_iter()
             .filter_map(|port| match &port.port_type {
                 SerialPortType::UsbPort(info) => {
-                    let matching_devices: Vec<Pair> =
+                    let matching_devices: Vec<Device> =
                         hardware::types::hardware_physical::DEVICES_PHYSICAL
                             .iter()
                             .filter_map(|device| {
                                 if device.usb.vendor_id == info.vid
                                     && device.usb.product_id == info.pid
                                 {
-                                    Some(Pair {
+                                    Some(Device {
                                         hardware: device.to_owned(),
                                         serial_port: port.port_name.to_owned(),
                                     })
@@ -67,13 +67,13 @@ impl Focus {
             .flatten()
             .collect();
 
-        trace!("Found keyboards: {:?}", pairs);
+        trace!("Found devices: {:?}", devices);
 
-        Ok(pairs)
+        Ok(devices)
     }
 
     /// Find the first supported keyboard.
-    pub fn find_first_keyboard() -> Result<Pair> {
+    pub fn find_first_keyboard() -> Result<Device> {
         let devices = match Self::find_all_keyboards() {
             Ok(devices) => devices,
             Err(e) => {
@@ -121,7 +121,7 @@ impl Focus {
     }
 
     /// Creates a new instance of the Focus API, connecting to the keyboard via keyboard struct.
-    pub async fn new_via_hardware(device: &Pair) -> Result<Self> {
+    pub async fn new_via_hardware(device: &Device) -> Result<Self> {
         Self::new_via_port(&device.serial_port).await
     }
 
