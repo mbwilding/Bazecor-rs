@@ -1,17 +1,17 @@
+use anyhow::Result;
 use api::flash::FirmwareRelease;
 use api::hardware::Hardware;
 use api::hardware_physical;
 use inquire::{Confirm, Select};
 
-pub fn ask_beta() -> bool {
-    Confirm::new("Allow Beta?")
+pub fn ask_beta() -> Result<bool> {
+    Ok(Confirm::new("Allow Beta?")
         .with_default(true)
         .with_help_message("Enables beta releases")
-        .prompt()
-        .unwrap()
+        .prompt()?)
 }
 
-pub fn ask_hardware() -> Hardware {
+pub fn ask_hardware() -> Result<Hardware> {
     let options = vec![
         hardware_physical::DEFY_WIRED,
         hardware_physical::DEFY_WIRED_BOOTLOADER,
@@ -23,13 +23,15 @@ pub fn ask_hardware() -> Hardware {
         hardware_physical::RAISE_ISO_BOOTLOADER,
     ];
 
-    Select::new("Product?", options)
+    Ok(Select::new("Product?", options)
         .with_help_message("Select the product")
-        .prompt()
-        .unwrap()
+        .prompt()?)
 }
 
-pub fn ask_firmware(releases: Vec<FirmwareRelease>, hardware: &Hardware) -> FirmwareRelease {
+pub fn ask_firmware(
+    releases: Vec<FirmwareRelease>,
+    hardware: &Hardware,
+) -> Result<FirmwareRelease> {
     let hardware_name = hardware.info.product.to_string();
 
     let options = releases
@@ -37,8 +39,7 @@ pub fn ask_firmware(releases: Vec<FirmwareRelease>, hardware: &Hardware) -> Firm
         .filter(|release| release.name == hardware_name)
         .collect();
 
-    Select::new("Firmware?", options)
+    Ok(Select::new("Firmware?", options)
         .with_help_message("Select the firmware you want to flash")
-        .prompt()
-        .unwrap()
+        .prompt()?)
 }
