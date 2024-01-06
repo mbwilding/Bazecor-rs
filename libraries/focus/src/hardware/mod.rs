@@ -5,7 +5,7 @@ use std::fmt::{Display, Formatter};
 #[derive(Debug, Clone)]
 pub struct Pair {
     pub hardware: Hardware,
-    pub port: String,
+    pub serial_port: String,
 }
 
 impl Display for Pair {

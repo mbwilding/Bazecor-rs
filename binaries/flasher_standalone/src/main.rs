@@ -19,6 +19,11 @@ async fn main() -> Result<()> {
         _ => ask_connected_device(pairs)?,
     };
 
+    debug!(
+        "Device: {} | {}",
+        &pair.hardware.info.display_name, &pair.serial_port
+    );
+
     let allow_beta = ask_beta()?;
     let firmware_releases = api::flash::load_available_firmware_versions(allow_beta).await?;
     let firmware_release = ask_firmware(firmware_releases, &pair.hardware)?;

@@ -48,7 +48,7 @@ impl Focus {
                                 {
                                     Some(Pair {
                                         hardware: device.to_owned(),
-                                        port: port.port_name.to_owned(),
+                                        serial_port: port.port_name.to_owned(),
                                     })
                                 } else {
                                     None
@@ -122,7 +122,7 @@ impl Focus {
 
     /// Creates a new instance of the Focus API, connecting to the keyboard via keyboard struct.
     pub async fn new_via_hardware(device: &Pair) -> Result<Self> {
-        Self::new_via_port(&device.port).await
+        Self::new_via_port(&device.serial_port).await
     }
 
     /// Creates a new instance of the Focus API, connecting to the keyboard via first available keyboard.
