@@ -2,8 +2,8 @@ mod logger;
 mod prompts;
 
 use crate::prompts::*;
-use anyhow::{bail, Result};
-use tracing::{debug, info};
+use anyhow::Result;
+use tracing::{debug, error, info};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -11,7 +11,10 @@ async fn main() -> Result<()> {
 
     let pairs = dygma_focus::Focus::find_all_keyboards()?;
     let pair = match pairs.len() {
-        0 => bail!("No devices found"),
+        0 => {
+            error!("No devices found, please connect your device and try again");
+            std::process::exit(1);
+        }
         1 => pairs[0].clone(),
         _ => ask_connected_device(pairs)?,
     };
