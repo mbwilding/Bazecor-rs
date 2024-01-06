@@ -678,12 +678,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bazecor_proc_macros",
- "bytes",
  "log",
  "serde",
  "tokio",
  "tokio-serial",
- "tokio-util",
 ]
 
 [[package]]

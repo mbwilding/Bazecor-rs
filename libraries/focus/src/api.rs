@@ -12,27 +12,70 @@ impl Focus {
     async fn command(&mut self, command: &str) -> Result<()> {
         trace!("Command TX: {}", command);
 
-        let command_with_newline = format!("{}\n", command);
         self.serial
-            .get_mut()
-            .write_all(command_with_newline.as_bytes())
+            .write_all(format!("{}\n", command).as_bytes())
             .await?;
-
-        self.serial.get_mut().flush().await?;
 
         Ok(())
     }
 
     /// Sends a command to the device, and returns the response as a string.
     async fn command_response_string(&mut self, command: &str) -> Result<String> {
-        let mut str = String::new();
-
         self.command(command).await?;
-        return Ok("TEST".to_string()); // TODO
 
-        self.serial.get_mut().read_to_string(&mut str).await?;
+        let eof_marker = b"\r\n.\r\n";
 
-        Ok(str.trim().to_string())
+        self.response_buffer.clear();
+
+        loop {
+            let prev_len = self.response_buffer.len();
+            self.response_buffer.resize(prev_len + 1024, 0);
+            match self
+                .serial
+                .read(&mut self.response_buffer[prev_len..])
+                .await
+            {
+                Ok(0) => continue,
+                Ok(size) => {
+                    self.response_buffer.truncate(prev_len + size);
+
+                    if self.response_buffer.ends_with(eof_marker) {
+                        break;
+                    }
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                Err(e) => bail!("Error reading from serial port: {:?}", e),
+            }
+        }
+
+        while let Some(pos) = self
+            .response_buffer
+            .windows(eof_marker.len())
+            .position(|window| window == eof_marker)
+        {
+            self.response_buffer.drain(pos..pos + eof_marker.len());
+        }
+
+        let start = self
+            .response_buffer
+            .iter()
+            .position(|&b| !b.is_ascii_whitespace())
+            .unwrap_or(0);
+
+        let end = self
+            .response_buffer
+            .iter()
+            .rposition(|&b| !b.is_ascii_whitespace())
+            .map_or(0, |p| p + 1);
+
+        let trimmed_buffer = &self.response_buffer[start..end];
+
+        let response = std::str::from_utf8(trimmed_buffer)
+            .map_err(|e| anyhow!("Failed to convert response to UTF-8 string: {:?}", e))?;
+
+        trace!("Command RX: {}", &response);
+
+        Ok(response.to_string())
     }
 
     /// Sends a command to the device, and returns the response as a numerical value.

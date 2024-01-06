@@ -1,11 +1,9 @@
 use crate::keyboards::Keyboard;
 use anyhow::{anyhow, Result};
-use bytes::BytesMut;
 use log::error;
+use std::str;
 use std::time::Duration;
-use std::{io, str};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
-use tokio_util::codec::{Decoder, Encoder, Framed};
 
 pub mod api;
 pub mod color;
@@ -18,37 +16,8 @@ pub const MAX_LAYERS: u8 = 10 - 1;
 
 /// The Dygma Focus API.
 pub struct Focus {
-    pub(crate) serial: Framed<SerialStream, LineCodec>,
-}
-
-struct LineCodec;
-
-impl Decoder for LineCodec {
-    type Item = String;
-    type Error = io::Error;
-
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        if let Some(newline) = src
-            .as_ref()
-            .windows(5)
-            .position(|bytes| bytes == [b'\r', b'\n', b'.', b'\r', b'\n'])
-        {
-            let line = src.split_to(newline + 2);
-            return match str::from_utf8(line.as_ref()) {
-                Ok(s) => Ok(Some(s.trim_end_matches("\r\n").to_string())),
-                Err(_) => Err(io::Error::new(io::ErrorKind::Other, "Invalid String")),
-            };
-        }
-        Ok(None)
-    }
-}
-
-impl Encoder<String> for LineCodec {
-    type Error = io::Error;
-
-    fn encode(&mut self, _item: String, _dst: &mut BytesMut) -> Result<(), Self::Error> {
-        Ok(())
-    }
+    pub(crate) serial: SerialStream,
+    pub(crate) response_buffer: Vec<u8>,
 }
 
 /// Constructors
@@ -75,9 +44,10 @@ impl Focus {
             .set_exclusive(false)
             .expect("Unable to set serial port exclusive to false");
 
-        let serial = LineCodec.framed(serial);
-
-        Ok(Self { serial })
+        Ok(Self {
+            serial,
+            response_buffer: Vec::with_capacity(4096),
+        })
     }
 
     /// Creates a new instance of the Focus API, connecting to the keyboard via keyboard struct.
