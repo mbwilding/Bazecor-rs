@@ -1,3 +1,5 @@
+pub(crate) mod types;
+
 use crate::hardware::{Hardware, KeyboardType, Product};
 use anyhow::{bail, Context, Result};
 use log::{debug, error, trace};
