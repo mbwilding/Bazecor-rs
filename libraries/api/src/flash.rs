@@ -167,11 +167,11 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
 
 pub async fn download_firmware(
     type_selected: &str,
-    info: &Hardware,
+    hardware: &Hardware,
     firmware_release: &FirmwareRelease,
 ) -> Result<Firmware> {
     if type_selected == "default" {
-        match info.info.product {
+        match hardware.info.product {
             Product::Raise => {
                 let file_type_fw = "firmware.hex";
                 let matched = firmware_release
@@ -187,7 +187,7 @@ pub async fn download_firmware(
                     sides: None,
                 });
             }
-            _ => match info.info.keyboard_type {
+            _ => match hardware.info.keyboard_type {
                 KeyboardType::Wireless => {
                     let file_type_fw = "Wireless_neuron.hex";
                     let matched = firmware_release
