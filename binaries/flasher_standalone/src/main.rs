@@ -3,7 +3,7 @@ mod prompts;
 
 use crate::prompts::*;
 use anyhow::{bail, Result};
-use tracing::debug;
+use tracing::{debug, info};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
     let allow_beta = ask_beta()?;
     let firmware_releases = api::flash::load_available_firmware_versions(allow_beta).await?;
     let firmware_release = ask_firmware(firmware_releases, &pair.hardware)?;
-    debug!("Release Notes\n{}", &firmware_release.body);
+    info!("Release Notes\n{}", &firmware_release.body);
     let _firmware =
         api::flash::download_firmware("default", &pair.hardware, &firmware_release).await?;
     debug!("Firmware downloaded successfully");
