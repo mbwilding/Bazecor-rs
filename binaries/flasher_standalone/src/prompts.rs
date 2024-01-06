@@ -1,7 +1,7 @@
 use anyhow::Result;
 use api::flash::FirmwareRelease;
+use api::hardware::types::hardware_physical;
 use api::hardware::Hardware;
-use api::hardware_physical;
 use inquire::{Confirm, Select};
 
 pub fn ask_beta() -> Result<bool> {
