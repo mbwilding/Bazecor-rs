@@ -12,6 +12,11 @@ pub struct Hardware {
 }
 
 #[derive(Debug)]
+pub struct Urls {
+    pub homepage: Url,
+}
+
+#[derive(Debug)]
 pub struct Url {
     pub name: &'static str,
     pub url: &'static str,
@@ -23,7 +28,7 @@ pub struct Info {
     pub product: Product,
     pub keyboard_type: KeyboardType,
     pub display_name: &'static str,
-    pub url: Url,
+    pub urls: Urls,
 }
 
 #[derive(Debug)]
@@ -39,10 +44,14 @@ pub enum Product {
 
 impl Display for Product {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            Product::Defy => "Defy",
-            Product::Raise => "Raise",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                Product::Defy => "Defy",
+                Product::Raise => "Raise",
+            }
+        )
     }
 }
 

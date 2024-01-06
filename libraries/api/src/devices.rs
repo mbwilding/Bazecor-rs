@@ -7,9 +7,11 @@ pub const DEFY_WIRED: Hardware = {
             product: Product::Defy,
             keyboard_type: KeyboardType::Wired,
             display_name: "Dygma Defy wired",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/defy/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/defy/",
+                },
             },
         },
         usb: Usb {
@@ -41,9 +43,11 @@ pub const DEFY_WIRED_BOOTLOADER: Hardware = {
             product: Product::Defy,
             keyboard_type: KeyboardType::Wired,
             display_name: "Dygma Defy wired",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/defy/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/defy/",
+                },
             },
         },
         usb: Usb {
@@ -69,9 +73,11 @@ pub const DEFY_WIRELESS: Hardware = {
             product: Product::Defy,
             keyboard_type: KeyboardType::Wireless,
             display_name: "Dygma Defy wireless",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/defy/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/defy/",
+                },
             },
         },
         usb: Usb {
@@ -103,9 +109,11 @@ pub const DEFY_WIRELESS_BOOTLOADER: Hardware = {
             product: Product::Defy,
             keyboard_type: KeyboardType::Wireless,
             display_name: "Dygma Defy wireless",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/defy/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/defy/",
+                },
             },
         },
         usb: Usb {
@@ -131,9 +139,11 @@ pub const RAISE_ANSI: Hardware = {
             product: Product::Raise,
             keyboard_type: KeyboardType::ANSI,
             display_name: "Dygma Raise ANSI",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/raise/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/raise/",
+                },
             },
         },
         usb: Usb {
@@ -165,9 +175,11 @@ pub const RAISE_ANSI_BOOTLOADER: Hardware = {
             product: Product::Raise,
             keyboard_type: KeyboardType::ANSI,
             display_name: "Dygma Raise ANSI",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/raise/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/raise/",
+                },
             },
         },
         usb: Usb {
@@ -193,9 +205,11 @@ pub const RAISE_ISO: Hardware = {
             product: Product::Raise,
             keyboard_type: KeyboardType::ISO,
             display_name: "Dygma Raise ISO",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/raise/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/raise/",
+                },
             },
         },
         usb: Usb {
@@ -227,9 +241,11 @@ pub const RAISE_ISO_BOOTLOADER: Hardware = {
             product: Product::Raise,
             keyboard_type: KeyboardType::ISO,
             display_name: "Dygma Raise ISO",
-            url: Url {
-                name: "Homepage",
-                url: "https://www.dygma.com/raise/",
+            urls: Urls {
+                homepage: Url {
+                    name: "Homepage",
+                    url: "https://www.dygma.com/raise/",
+                },
             },
         },
         usb: Usb {
