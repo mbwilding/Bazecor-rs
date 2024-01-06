@@ -4,6 +4,7 @@ use log::{debug, error, trace};
 use regex::Regex;
 use semver::{Version, VersionReq};
 use serde::Deserialize;
+use tokio::join;
 
 const FW_MAJOR_VERSION: &str = "1.x";
 
@@ -178,8 +179,11 @@ pub async fn download_firmware(
                     .iter()
                     .find(|asset| asset.name == file_type_fw)
                     .context("Firmware not found")?;
+
+                let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
+
                 return Ok(Firmware {
-                    firmware: obtain_fw_file(file_type_fw, &matched.url).await?,
+                    firmware: fw,
                     sides: None,
                 });
             }
@@ -191,8 +195,11 @@ pub async fn download_firmware(
                         .iter()
                         .find(|asset| asset.name == file_type_fw)
                         .context("Firmware not found")?;
+
+                    let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
+
                     return Ok(Firmware {
-                        firmware: obtain_fw_file(file_type_fw, &matched.url).await?,
+                        firmware: fw,
                         sides: None,
                     });
                 }
@@ -211,9 +218,14 @@ pub async fn download_firmware(
                         .find(|asset| asset.name == file_type_fw_sides)
                         .context("Firmware sides not found")?;
 
+                    let fw_future = obtain_firmware_file(file_type_fw, &matched_fw.url);
+                    let sides_future = obtain_firmware_file(file_type_fw_sides, &matched_sides.url);
+
+                    let (fw_result, fw_sides_result) = join!(fw_future, sides_future);
+
                     return Ok(Firmware {
-                        firmware: obtain_fw_file(file_type_fw, &matched_fw.url).await?,
-                        sides: Some(obtain_fw_file(file_type_fw_sides, &matched_sides.url).await?),
+                        firmware: fw_result?,
+                        sides: Some(fw_sides_result?),
                     });
                 }
                 _ => bail!("Invalid keyboard type"),
@@ -224,7 +236,7 @@ pub async fn download_firmware(
     bail!("Invalid firmware type")
 }
 
-pub async fn obtain_fw_file(file_type: &str, url: &str) -> Result<Vec<u8>> {
+pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>> {
     let client = reqwest::Client::new();
 
     let response = client
