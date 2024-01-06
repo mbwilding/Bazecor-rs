@@ -721,7 +721,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "flasher"
+name = "flasher-standalone"
 version = "0.1.0"
 dependencies = [
  "anyhow",

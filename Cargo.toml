@@ -2,6 +2,6 @@
 resolver = "2"
 members = [
     "libraries/api",
-    "binaries/flasher",
+    "binaries/flasher-standalone",
     "binaries/bazecor-tauri/src-tauri"
 ]
