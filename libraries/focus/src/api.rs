@@ -115,99 +115,6 @@ impl Focus {
     }
 }
 
-/// Public methods
-impl Focus {
-    /// Gets the whole configuration stored in the keyboard.
-    pub fn dygma_backup(&mut self) -> Result<Configuration> {
-        Ok(Configuration {
-            keymap_custom: self.keymap_custom_get()?,
-            keymap_default: self.keymap_default_get()?,
-            keymap_only_custom: self.keymap_only_custom_get()?,
-            settings_default_layer: self.settings_default_layer_get()?,
-            settings_version: self.settings_version_get()?,
-            // eeprom_contents: self.eeprom_contents_get()?,
-            superkeys_map: self.superkeys_map_get()?,
-            superkeys_wait_for: self.superkeys_wait_for_get()?,
-            superkeys_timeout: self.superkeys_timeout_get()?,
-            superkeys_repeat: self.superkeys_repeat_get()?,
-            superkeys_hold_start: self.superkeys_hold_start_get()?,
-            superkeys_overlap: self.superkeys_overlap_get()?,
-            led_mode: self.led_mode_get()?,
-            led_brightness: self.led_brightness_get()?,
-            led_brightness_underglow: self.led_brightness_underglow_get()?,
-            led_brightness_wireless: self.led_brightness_wireless_get()?,
-            led_brightness_underglow_wireless: self.led_brightness_underglow_wireless_get()?,
-            led_fade: self.led_fade_get()?,
-            led_theme: self.led_theme_get()?,
-            palette: self.palette_get()?,
-            color_map: self.color_map_get()?,
-            led_idle_true_sleep: self.led_idle_true_sleep_get()?,
-            led_idle_true_sleep_time: self.led_idle_true_sleep_time_get()?,
-            led_idle_time_limit: self.led_idle_time_limit_get()?,
-            led_idle_wireless: self.led_idle_wireless_get()?,
-            hardware_version: self.hardware_version_get()?,
-            qukeys_hold_timeout: self.qukeys_hold_timeout_get()?,
-            qukeys_overlap_threshold: self.qukeys_overlap_threshold_get()?,
-            macros_map: self.macros_map_get()?,
-            mouse_speed: self.mouse_speed_get()?,
-            mouse_delay: self.mouse_delay_get()?,
-            mouse_acceleration_speed: self.mouse_acceleration_speed_get()?,
-            mouse_acceleration_delay: self.mouse_acceleration_delay_get()?,
-            mouse_wheel_speed: self.mouse_wheel_speed_get()?,
-            mouse_wheel_delay: self.mouse_wheel_delay_get()?,
-            mouse_speed_limit: self.mouse_speed_limit_get()?,
-            wireless_battery_saving_mode: self.wireless_battery_saving_mode_get()?,
-            wireless_rf_power_level: self.wireless_rf_power_level_get()?,
-            wireless_rf_channel_hop: self.wireless_rf_channel_hop_get()?,
-        })
-    }
-
-    /// Sets the whole configuration stored in the keyboard.
-    pub fn dygma_restore(&mut self, config: &Configuration) -> Result<()> {
-        self.keymap_custom_set(&config.keymap_custom)?;
-        self.keymap_default_set(&config.keymap_default)?;
-        self.keymap_only_custom_set(config.keymap_only_custom)?;
-        self.settings_default_layer_set(config.settings_default_layer)?;
-        self.settings_version_set(&config.settings_version)?;
-        // self.eeprom_contents_set(&config.eeprom_contents)?;
-        self.superkeys_map_set(&config.superkeys_map)?;
-        self.superkeys_wait_for_set(config.superkeys_wait_for)?;
-        self.superkeys_timeout_set(config.superkeys_timeout)?;
-        self.superkeys_repeat_set(config.superkeys_repeat)?;
-        self.superkeys_hold_start_set(config.superkeys_hold_start)?;
-        self.superkeys_overlap_set(config.superkeys_overlap)?;
-        self.led_mode_set(config.led_mode)?;
-        self.led_brightness_set(config.led_brightness)?;
-        self.led_brightness_underglow_set(config.led_brightness_underglow)?;
-        self.led_brightness_wireless_set(config.led_brightness_wireless)?;
-        self.led_brightness_underglow_wireless_set(config.led_brightness_underglow_wireless)?;
-        self.led_fade_set(config.led_fade)?;
-        self.led_theme_set(&config.led_theme)?;
-        self.palette_set(&config.palette)?;
-        self.color_map_set(&config.color_map)?;
-        self.led_idle_true_sleep_set(config.led_idle_true_sleep)?;
-        self.led_idle_true_sleep_time_set(config.led_idle_true_sleep_time)?;
-        self.led_idle_time_limit_set(config.led_idle_time_limit)?;
-        self.led_idle_wireless_set(config.led_idle_wireless)?;
-        self.hardware_version_set(&config.hardware_version)?;
-        self.qukeys_hold_timeout_set(config.qukeys_hold_timeout)?;
-        self.qukeys_overlap_threshold_set(config.qukeys_overlap_threshold)?;
-        self.macros_map_set(&config.macros_map)?;
-        self.mouse_speed_set(config.mouse_speed)?;
-        self.mouse_delay_set(config.mouse_delay)?;
-        self.mouse_acceleration_speed_set(config.mouse_acceleration_speed)?;
-        self.mouse_acceleration_delay_set(config.mouse_acceleration_delay)?;
-        self.mouse_wheel_speed_set(config.mouse_wheel_speed)?;
-        self.mouse_wheel_delay_set(config.mouse_wheel_delay)?;
-        self.mouse_speed_limit_set(config.mouse_speed_limit)?;
-        self.wireless_battery_saving_mode_set(config.wireless_battery_saving_mode)?;
-        self.wireless_rf_power_level_set(config.wireless_rf_power_level)?;
-        self.wireless_rf_channel_hop_set(config.wireless_rf_channel_hop)?;
-
-        Ok(())
-    }
-}
-
 /// Public API methods
 impl Focus {
     /// Get the version of the firmware.
@@ -528,7 +435,7 @@ impl Focus {
     /// Gets the color of a specific LED.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledat
-    pub fn led_at_get(&mut self, led: u8) -> Result<Color> {
+    pub fn led_at_get(&mut self, led: u8) -> Result<RGB> {
         let response = self.command_response_string(&format!("led.at {}", led))?;
 
         if response.is_empty() {
@@ -545,13 +452,13 @@ impl Focus {
         let g = parts[1].parse()?;
         let b = parts[2].parse()?;
 
-        Ok(Color { r, g, b })
+        Ok(RGB { r, g, b })
     }
 
     /// Sets the color of a specific LED.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledat
-    pub fn led_at_set(&mut self, led: u8, color: &Color) -> Result<()> {
+    pub fn led_at_set(&mut self, led: u8, color: &RGB) -> Result<()> {
         if &self.led_at_get(led)? == color {
             return Ok(());
         }
@@ -565,7 +472,7 @@ impl Focus {
     /// Sets the color of all the LEDs.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledsetall
-    pub fn led_all_set(&mut self, color: &Color) -> Result<()> {
+    pub fn led_all_set(&mut self, color: &RGB) -> Result<()> {
         self.command(&format!("led.setAll {} {} {}", color.r, color.g, color.b,))
     }
 

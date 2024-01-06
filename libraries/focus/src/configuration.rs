@@ -9,7 +9,7 @@ pub struct Configuration {
     pub keymap_only_custom: bool,
     pub settings_default_layer: u8,
     pub settings_version: String,
-    // pub eeprom_contents: String,
+    pub eeprom_contents: String,
     pub superkeys_map: String,
     pub superkeys_wait_for: Duration,
     pub superkeys_timeout: Duration,
