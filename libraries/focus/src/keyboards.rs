@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use log::{debug, error};
 use serde::{Deserialize, Serialize};
-use serialport::SerialPortType;
+use tokio_serial::SerialPortType;
 
 /// Supported device.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,7 +43,7 @@ pub struct Keyboard {
 impl Keyboard {
     /// Find all supported keyboards.
     pub fn find_all_keyboards() -> Result<Vec<Keyboard>> {
-        let ports = match serialport::available_ports() {
+        let ports = match tokio_serial::available_ports() {
             Ok(ports) => ports,
             Err(e) => {
                 let err_msg = format!("Failed to enumerate serial ports: {:?}", e);
