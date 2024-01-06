@@ -678,6 +678,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bazecor_proc_macros",
+ "lazy_static",
  "log",
  "serde",
  "tokio",

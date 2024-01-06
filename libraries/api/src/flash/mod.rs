@@ -1,7 +1,7 @@
 pub mod types;
 
-use crate::hardware::{Hardware, KeyboardType, Product};
 use anyhow::{bail, Context, Result};
+use dygma_focus::hardware::{Hardware, KeyboardType, Product};
 use log::{debug, error, trace};
 use regex::Regex;
 use semver::{Version, VersionReq};

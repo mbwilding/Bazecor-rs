@@ -1,7 +1,6 @@
 use anyhow::Result;
 use api::flash::FirmwareRelease;
-use api::hardware::types::hardware_physical;
-use api::hardware::Hardware;
+use dygma_focus::hardware::{Hardware, Pair};
 use inquire::{Confirm, Select};
 
 pub fn ask_beta() -> Result<bool> {
@@ -11,20 +10,9 @@ pub fn ask_beta() -> Result<bool> {
         .prompt()?)
 }
 
-pub fn ask_hardware() -> Result<Hardware> {
-    let options = vec![
-        hardware_physical::DEFY_WIRED,
-        hardware_physical::DEFY_WIRED_BOOTLOADER,
-        hardware_physical::DEFY_WIRELESS,
-        hardware_physical::DEFY_WIRELESS_BOOTLOADER,
-        hardware_physical::RAISE_ANSI,
-        hardware_physical::RAISE_ANSI_BOOTLOADER,
-        hardware_physical::RAISE_ISO,
-        hardware_physical::RAISE_ISO_BOOTLOADER,
-    ];
-
-    Ok(Select::new("Product?", options)
-        .with_help_message("Select the product")
+pub fn ask_connected_device(options: Vec<Pair>) -> Result<Pair> {
+    Ok(Select::new("Which connected device?", options)
+        .with_help_message("Select the connected device")
         .prompt()?)
 }
 

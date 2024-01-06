@@ -1,4 +1,14 @@
 use crate::hardware::*;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref DEVICES_VIRTUAL: [Hardware; 4] = [
+        DEFY_WIRED_VIRTUAL,
+        DEFY_WIRELESS_VIRTUAL,
+        RAISE_ANSI_VIRTUAL,
+        RAISE_ISO_VIRTUAL,
+    ];
+}
 
 pub const DEFY_WIRED_VIRTUAL: Hardware = {
     Hardware {

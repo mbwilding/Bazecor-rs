@@ -2,7 +2,19 @@ pub mod types;
 
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub struct Pair {
+    pub hardware: Hardware,
+    pub port: String,
+}
+
+impl Display for Pair {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.hardware.info.display_name)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub struct Hardware {
     pub info: Info,
     pub usb: Usb,
@@ -20,7 +32,7 @@ impl Display for Hardware {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Virtual {
     pub version: VirtualNode,
     pub keymap_custom: VirtualNode,
@@ -99,24 +111,24 @@ pub struct Virtual {
     pub wireless_rf_sync_pairing: Option<VirtualNode>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct VirtualNode {
     pub data: &'static str,
     pub erasable: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Urls {
     pub homepage: Url,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Url {
     pub name: &'static str,
     pub url: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Info {
     pub vendor: Vendor,
     pub product: Product,
@@ -125,12 +137,12 @@ pub struct Info {
     pub urls: Urls,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Vendor {
     Dygma,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Product {
     Defy,
     Raise,
@@ -149,7 +161,7 @@ impl Display for Product {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum KeyboardType {
     Wired,
     Wireless,
@@ -157,24 +169,24 @@ pub enum KeyboardType {
     ANSI,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Usb {
     pub vendor_id: u16,
     pub product_id: u16,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Grid {
     pub rows: u8,
     pub columns: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Languages {
     pub en: Dialog,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Dialog {
     pub update_instructions: &'static str,
 }

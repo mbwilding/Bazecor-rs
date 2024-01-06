@@ -1,4 +1,18 @@
 use crate::hardware::*;
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref DEVICES_PHYSICAL: [Hardware; 8] = [
+        DEFY_WIRED,
+        DEFY_WIRED_BOOTLOADER,
+        DEFY_WIRELESS,
+        DEFY_WIRELESS_BOOTLOADER,
+        RAISE_ANSI,
+        RAISE_ANSI_BOOTLOADER,
+        RAISE_ISO,
+        RAISE_ISO_BOOTLOADER,
+    ];
+}
 
 pub const DEFY_WIRED: Hardware = {
     Hardware {
