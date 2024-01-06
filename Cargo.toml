@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "libraries/api",
+    "binaries/flasher",
+    "binaries/bazecor-tauri/src-tauri"
+]

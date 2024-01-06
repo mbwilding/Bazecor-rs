@@ -1,0 +1,16 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+authors = ["Matthew Wilding <mbwilding@gmail.com>"]
+
+[dependencies]
+anyhow = "1.0"
+hex = "0.4"
+log = "0.4"
+regex = "1.10"
+reqwest = { version = "0.11", features = ["json"] }
+semver = "1.0"
+serde = { version = "1.0", features = ["derive"] } # May not need full
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
