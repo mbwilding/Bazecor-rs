@@ -25,11 +25,11 @@ async fn main() -> Result<()> {
     );
 
     let allow_beta = ask_beta()?;
-    let firmware_releases = api::flash::load_available_firmware_versions(allow_beta).await?;
+    let firmware_releases = api::downloader::load_available_firmware_versions(allow_beta).await?;
     let firmware_release = ask_firmware(firmware_releases, &device.hardware)?;
     info!("Release Notes\n{}", &firmware_release.body);
     let _firmware =
-        api::flash::download_firmware("default", &device.hardware, &firmware_release).await?;
+        api::downloader::download_firmware("default", &device.hardware, &firmware_release).await?;
     debug!("Firmware downloaded successfully");
 
     Ok(())

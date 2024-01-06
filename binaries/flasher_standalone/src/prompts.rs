@@ -1,5 +1,5 @@
 use anyhow::Result;
-use api::flash::FirmwareRelease;
+use api::downloader::FirmwareRelease;
 use dygma_focus::hardware::{Device, Hardware};
 use inquire::{Confirm, Select};
 
