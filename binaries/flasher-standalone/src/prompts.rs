@@ -1,3 +1,4 @@
+use api::devices;
 use api::flash::FirmwareRelease;
 use api::hardware::Hardware;
 use inquire::{Confirm, Select};
@@ -10,53 +11,33 @@ pub fn ask_beta() -> bool {
         .unwrap()
 }
 
-pub fn ask_hardware() -> Option<Hardware> {
+pub fn ask_hardware() -> Hardware {
     let options = vec![
-        "All",
-        "Defy Wired",
-        "Defy Wired Bootloader",
-        "Defy Wireless",
-        "Defy Wireless Bootloader",
-        "Raise ANSI",
-        "Raise ANSI Bootloader",
-        "Raise ISO",
-        "Raise ISO Bootloader",
+        devices::DEFY_WIRED,
+        devices::DEFY_WIRED_BOOTLOADER,
+        devices::DEFY_WIRELESS,
+        devices::DEFY_WIRELESS_BOOTLOADER,
+        devices::RAISE_ANSI,
+        devices::RAISE_ANSI_BOOTLOADER,
+        devices::RAISE_ISO,
+        devices::RAISE_ISO_BOOTLOADER,
     ];
 
-    let hardware = Select::new("Product?", options)
+    Select::new("Product?", options)
         .with_help_message("Select the product")
         .prompt()
-        .unwrap();
-
-    match hardware {
-        "Defy Wired" => Some(api::devices::DEFY_WIRED),
-        "Defy Wired Bootloader" => Some(api::devices::DEFY_WIRED_BOOTLOADER),
-        "Defy Wireless" => Some(api::devices::DEFY_WIRELESS),
-        "Defy Wireless Bootloader" => Some(api::devices::DEFY_WIRED_BOOTLOADER),
-        "Raise ANSI" => Some(api::devices::RAISE_ANSI),
-        "Raise ANSI Bootloader" => Some(api::devices::RAISE_ANSI_BOOTLOADER),
-        "Raise ISO" => Some(api::devices::RAISE_ISO),
-        "Raise ISO Bootloader" => Some(api::devices::RAISE_ISO_BOOTLOADER),
-        _ => None,
-    }
+        .unwrap()
 }
 
-pub fn ask_firmware(
-    releases: Vec<FirmwareRelease>,
-    hardware: &Option<Hardware>,
-) -> FirmwareRelease {
-    let releases = match hardware {
-        None => releases,
-        Some(product) => {
-            let hardware_name = product.info.product.to_string();
-            releases
-                .into_iter()
-                .filter(|release| release.name == hardware_name)
-                .collect()
-        }
-    };
+pub fn ask_firmware(releases: Vec<FirmwareRelease>, hardware: &Hardware) -> FirmwareRelease {
+    let hardware_name = hardware.info.product.to_string();
 
-    Select::new("Firmware?", releases)
+    let options = releases
+        .into_iter()
+        .filter(|release| release.name == hardware_name)
+        .collect();
+
+    Select::new("Firmware?", options)
         .with_help_message("Select the firmware you want to flash")
         .prompt()
         .unwrap()

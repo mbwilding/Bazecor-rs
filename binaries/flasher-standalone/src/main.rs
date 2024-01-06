@@ -2,7 +2,7 @@ mod prompts;
 
 use crate::prompts::*;
 use anyhow::Result;
-use tracing::{info, warn};
+use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,13 +16,8 @@ async fn main() -> Result<()> {
     let firmware_releases = api::flash::load_available_firmware_versions(allow_beta).await?;
     let firmware_release = ask_firmware(firmware_releases, &hardware);
     info!("Release Notes\n{}", &firmware_release.body);
-
-    if let Some(hw) = &hardware {
-        let _firmware = api::flash::download_firmware("default", hw, &firmware_release).await?;
-        info!("Firmware downloaded");
-    } else {
-        warn!("Skipping download as no specific hardware was selected");
-    }
+    let _firmware = api::flash::download_firmware("default", &hardware, &firmware_release).await?;
+    info!("Firmware downloaded successfully");
 
     Ok(())
 }

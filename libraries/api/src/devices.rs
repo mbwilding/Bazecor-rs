@@ -6,7 +6,7 @@ pub const DEFY_WIRED: Hardware = {
             vendor: Vendor::Dygma,
             product: Product::Defy,
             keyboard_type: KeyboardType::Wired,
-            display_name: "Dygma Defy wired",
+            display_name: "Dygma Defy Wired",
             urls: Urls {
                 homepage: Url {
                     name: "Homepage",
@@ -42,7 +42,7 @@ pub const DEFY_WIRED_BOOTLOADER: Hardware = {
             vendor: Vendor::Dygma,
             product: Product::Defy,
             keyboard_type: KeyboardType::Wired,
-            display_name: "Dygma Defy wired",
+            display_name: "Dygma Defy Wired (Bootloader)",
             urls: Urls {
                 homepage: Url {
                     name: "Homepage",
@@ -72,7 +72,7 @@ pub const DEFY_WIRELESS: Hardware = {
             vendor: Vendor::Dygma,
             product: Product::Defy,
             keyboard_type: KeyboardType::Wireless,
-            display_name: "Dygma Defy wireless",
+            display_name: "Dygma Defy Wireless",
             urls: Urls {
                 homepage: Url {
                     name: "Homepage",
@@ -108,7 +108,7 @@ pub const DEFY_WIRELESS_BOOTLOADER: Hardware = {
             vendor: Vendor::Dygma,
             product: Product::Defy,
             keyboard_type: KeyboardType::Wireless,
-            display_name: "Dygma Defy wireless",
+            display_name: "Dygma Defy Wireless (Bootloader)",
             urls: Urls {
                 homepage: Url {
                     name: "Homepage",
@@ -174,7 +174,7 @@ pub const RAISE_ANSI_BOOTLOADER: Hardware = {
             vendor: Vendor::Dygma,
             product: Product::Raise,
             keyboard_type: KeyboardType::ANSI,
-            display_name: "Dygma Raise ANSI",
+            display_name: "Dygma Raise ANSI (Bootloader)",
             urls: Urls {
                 homepage: Url {
                     name: "Homepage",
@@ -240,7 +240,7 @@ pub const RAISE_ISO_BOOTLOADER: Hardware = {
             vendor: Vendor::Dygma,
             product: Product::Raise,
             keyboard_type: KeyboardType::ISO,
-            display_name: "Dygma Raise ISO",
+            display_name: "Dygma Raise ISO (Bootloader)",
             urls: Urls {
                 homepage: Url {
                     name: "Homepage",

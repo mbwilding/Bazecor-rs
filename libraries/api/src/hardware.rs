@@ -11,6 +11,12 @@ pub struct Hardware {
     pub instructions: Languages,
 }
 
+impl Display for Hardware {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.info.display_name)
+    }
+}
+
 #[derive(Debug)]
 pub struct Urls {
     pub homepage: Url,
