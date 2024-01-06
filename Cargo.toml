@@ -1,7 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "libraries/api",
+    "binaries/bazecor/src-tauri",
     "binaries/flasher_standalone",
-    "binaries/bazecor/src-tauri"
+    "libraries/api",
+    "libraries/focus",
+    "libraries/proc_macros",
 ]
