@@ -1,6 +1,6 @@
-use api::devices;
 use api::flash::FirmwareRelease;
 use api::hardware::Hardware;
+use api::hardware_physical;
 use inquire::{Confirm, Select};
 
 pub fn ask_beta() -> bool {
@@ -13,14 +13,14 @@ pub fn ask_beta() -> bool {
 
 pub fn ask_hardware() -> Hardware {
     let options = vec![
-        devices::DEFY_WIRED,
-        devices::DEFY_WIRED_BOOTLOADER,
-        devices::DEFY_WIRELESS,
-        devices::DEFY_WIRELESS_BOOTLOADER,
-        devices::RAISE_ANSI,
-        devices::RAISE_ANSI_BOOTLOADER,
-        devices::RAISE_ISO,
-        devices::RAISE_ISO_BOOTLOADER,
+        hardware_physical::DEFY_WIRED,
+        hardware_physical::DEFY_WIRED_BOOTLOADER,
+        hardware_physical::DEFY_WIRELESS,
+        hardware_physical::DEFY_WIRELESS_BOOTLOADER,
+        hardware_physical::RAISE_ANSI,
+        hardware_physical::RAISE_ANSI_BOOTLOADER,
+        hardware_physical::RAISE_ISO,
+        hardware_physical::RAISE_ISO_BOOTLOADER,
     ];
 
     Select::new("Product?", options)

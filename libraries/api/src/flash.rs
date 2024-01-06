@@ -160,7 +160,7 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
         })
         .collect();
 
-    debug!("Firmware releases: {:#?}", releases);
+    trace!("Firmware releases: {:#?}", releases);
 
     Ok(releases)
 }
@@ -244,6 +244,8 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>>
         .header("User-Agent", "Bazecor-Rust")
         .send()
         .await?;
+
+    debug!("Downloading firmware file: {}", url);
 
     match file_type {
         "keyscanner.bin" | "Wired_neuron.uf2" => {

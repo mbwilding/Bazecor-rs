@@ -3,12 +3,12 @@ mod prompts;
 use crate::prompts::*;
 use anyhow::Result;
 use tracing::info;
+use tracing_subscriber::filter::EnvFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_ansi(true)
-        .with_max_level(tracing_subscriber::filter::LevelFilter::INFO)
+    tracing_subscriber::fmt::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
         .init();
 
     let allow_beta = ask_beta();

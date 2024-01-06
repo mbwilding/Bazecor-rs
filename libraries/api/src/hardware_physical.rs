@@ -33,6 +33,7 @@ pub const DEFY_WIRED: Hardware = {
                 update_instructions: "To update the firmware, the keyboard needs a special reset. When the countdown starts, press and hold the Escape key. Soon after the countdown finished, the Neuron's light should start a blue pulsing pattern, and the flashing will proceed. At this point, you should release the Escape key.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -63,6 +64,7 @@ pub const DEFY_WIRED_BOOTLOADER: Hardware = {
                 update_instructions: "To update the firmware, press the button at the bottom. You must not hold any key on the keyboard while the countdown is in progress, nor afterwards, until the flashing is finished. When the countdown reaches zero, the Neuron's light should start a blue pulsing pattern, and flashing will then proceed.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -99,6 +101,7 @@ pub const DEFY_WIRELESS: Hardware = {
                 update_instructions: "To update the firmware, the keyboard needs a special reset. When the countdown starts, press and hold the Escape key. Soon after the countdown finished, the Neuron's light should start a blue pulsing pattern, and the flashing will proceed. At this point, you should release the Escape key.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -129,6 +132,7 @@ pub const DEFY_WIRELESS_BOOTLOADER: Hardware = {
                 update_instructions: "To update the firmware, press the button at the bottom. You must not hold any key on the keyboard while the countdown is in progress, nor afterwards, until the flashing is finished. When the countdown reaches zero, the Neuron's light should start a blue pulsing pattern, and flashing will then proceed.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -165,6 +169,7 @@ pub const RAISE_ANSI: Hardware = {
                 update_instructions: "To update the firmware, the keyboard needs a special reset. When the countdown starts, press and hold the Escape key. Soon after the countdown finished, the Neuron's light should start a blue pulsing pattern, and the flashing will proceed. At this point, you should release the Escape key.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -195,6 +200,7 @@ pub const RAISE_ANSI_BOOTLOADER: Hardware = {
                 update_instructions: "To update the firmware, press the button at the bottom. You must not hold any key on the keyboard while the countdown is in progress, nor afterwards, until the flashing is finished. When the countdown reaches zero, the Neuron's light should start a blue pulsing pattern, and flashing will then proceed.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -231,6 +237,7 @@ pub const RAISE_ISO: Hardware = {
                 update_instructions: "To update the firmware, the keyboard needs a special reset. When the countdown starts, press and hold the Escape key. Soon after the countdown finished, the Neuron's light should start a blue pulsing pattern, and the flashing will proceed. At this point, you should release the Escape key.",
             },
         },
+        virtual_info: None,
     }
 };
 
@@ -261,5 +268,6 @@ pub const RAISE_ISO_BOOTLOADER: Hardware = {
                 update_instructions: "To update the firmware, press the button at the bottom. You must not hold any key on the keyboard while the countdown is in progress, nor afterwards, until the flashing is finished. When the countdown reaches zero, the Neuron's light should start a blue pulsing pattern, and flashing will then proceed.",
             },
         },
+        virtual_info: None,
     }
 };

@@ -9,6 +9,7 @@ pub struct Hardware {
     pub keyboard_underglow: Option<Grid>,
     pub rgbw_mode: Option<bool>,
     pub instructions: Languages,
+    pub virtual_info: Option<Virtual>,
 }
 
 impl Display for Hardware {
@@ -16,6 +17,9 @@ impl Display for Hardware {
         write!(f, "{}", self.info.display_name)
     }
 }
+
+#[derive(Debug)]
+pub struct Virtual {}
 
 #[derive(Debug)]
 pub struct Urls {
