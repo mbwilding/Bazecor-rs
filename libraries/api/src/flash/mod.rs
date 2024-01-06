@@ -1,4 +1,4 @@
-pub(crate) mod types;
+pub mod types;
 
 use crate::hardware::{Hardware, KeyboardType, Product};
 use anyhow::{bail, Context, Result};
