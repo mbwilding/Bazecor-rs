@@ -168,13 +168,13 @@ pub async fn download_firmware(
     firmware_list: &Vec<FirmwareRelease>,
     selected_firmware: usize,
 ) -> Result<Firmware> {
-    let firmware = &firmware_list[selected_firmware];
+    let firmware_release = &firmware_list[selected_firmware];
 
     if type_selected == "default" {
         match info.info.product {
             Product::Raise => {
                 let file_type_fw = "firmware.hex";
-                let matched = firmware
+                let matched = firmware_release
                     .assets
                     .iter()
                     .find(|asset| asset.name == file_type_fw)
@@ -190,7 +190,7 @@ pub async fn download_firmware(
             _ => match info.info.keyboard_type {
                 KeyboardType::Wireless => {
                     let file_type_fw = "Wireless_neuron.hex";
-                    let matched = firmware
+                    let matched = firmware_release
                         .assets
                         .iter()
                         .find(|asset| asset.name == file_type_fw)
@@ -205,27 +205,27 @@ pub async fn download_firmware(
                 }
                 KeyboardType::Wired => {
                     let file_type_fw = "Wired_neuron.uf2";
-                    let matched_fw = firmware
+                    let matched_fw = firmware_release
                         .assets
                         .iter()
                         .find(|asset| asset.name == file_type_fw)
                         .context("Firmware not found")?;
 
                     let file_type_fw_sides = "keyscanner.bin";
-                    let matched_sides = firmware
+                    let matched_sides = firmware_release
                         .assets
                         .iter()
                         .find(|asset| asset.name == file_type_fw_sides)
                         .context("Firmware sides not found")?;
 
-                    let fw_future = obtain_firmware_file(file_type_fw, &matched_fw.url);
-                    let sides_future = obtain_firmware_file(file_type_fw_sides, &matched_sides.url);
-
-                    let (fw_result, fw_sides_result) = join!(fw_future, sides_future);
+                    let (firmware, sides) = join!(
+                        obtain_firmware_file(file_type_fw, &matched_fw.url),
+                        obtain_firmware_file(file_type_fw_sides, &matched_sides.url)
+                    );
 
                     return Ok(Firmware {
-                        firmware: fw_result?,
-                        sides: Some(fw_sides_result?),
+                        firmware: firmware?,
+                        sides: Some(sides?),
                     });
                 }
                 _ => bail!("Invalid keyboard type"),
