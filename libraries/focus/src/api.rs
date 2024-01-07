@@ -285,11 +285,32 @@ impl Focus {
     }
 
     // TODO: upgrade.start
-    // TODO: upgrade.neuron
+
+    /// Upgrade: Neuron.
+    pub async fn upgrade_neuron(&mut self) -> Result<()> {
+        self.command("upgrade.neuron").await
+    }
+
     // TODO: upgrade.end
-    // TODO: upgrade.keyscanner.isConnected
-    // TODO: upgrade.keyscanner.isBootloader
-    // TODO: upgrade.keyscanner.begin
+
+    /// Gets the status of the Keyscanner: is connected?
+    pub async fn upgrade_keyscanner_is_connected_get(&mut self, side_id: &str) -> Result<bool> {
+        self.command_response_bool(&format!("upgrade.keyscanner.isConnected {}", side_id))
+            .await
+    }
+
+    /// Gets the status of the Keyscanner: is bootloader?
+    pub async fn upgrade_keyscanner_is_bootloader_get(&mut self, side_id: &str) -> Result<bool> {
+        self.command_response_bool(&format!("upgrade.keyscanner.isBootloader {}", side_id))
+            .await
+    }
+
+    /// Gets the status of the Keyscanner: begin?
+    pub async fn upgrade_keyscanner_begin_get(&mut self, side_id: &str) -> Result<bool> {
+        self.command_response_bool(&format!("upgrade.keyscanner.begin {}", side_id))
+            .await
+    }
+
     // TODO: upgrade.keyscanner.isReady
     // TODO: upgrade.keyscanner.getInfo
     // TODO: upgrade.keyscanner.sendWrite
