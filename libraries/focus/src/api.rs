@@ -128,7 +128,7 @@ impl Focus {
     /// Get the version of the firmware.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#version
-    pub async fn version_get(&mut self) -> Result<String> {
+    pub async fn version(&mut self) -> Result<String> {
         self.command_response_string("version").await
     }
 
@@ -230,7 +230,7 @@ impl Focus {
     /// Gets a boolean value that states true if all checks have been performed on the current settings, and its upload was done in the intended way.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#settingsvalid
-    pub async fn settings_valid_get(&mut self) -> Result<bool> {
+    pub async fn settings_valid(&mut self) -> Result<bool> {
         self.command_response_numerical("settings.valid?").await
     }
 
@@ -255,7 +255,7 @@ impl Focus {
     /// Gets the CRC checksum of the layout.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#settingscrc
-    pub async fn settings_crc_get(&mut self) -> Result<String> {
+    pub async fn settings_crc(&mut self) -> Result<String> {
         self.command_response_string("settings.crc").await
     }
 
@@ -280,40 +280,38 @@ impl Focus {
     /// Gets the EEPROM's free bytes.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#eepromfree
-    pub async fn eeprom_free_get(&mut self) -> Result<String> {
+    pub async fn eeprom_free(&mut self) -> Result<String> {
         self.command_response_string("eeprom.free").await
     }
 
     // TODO: upgrade.start
 
-    /// Upgrade: Neuron.
     pub async fn upgrade_neuron(&mut self) -> Result<()> {
         self.command("upgrade.neuron").await
     }
 
     // TODO: upgrade.end
 
-    /// Gets the status of the Keyscanner: is connected?
-    pub async fn upgrade_keyscanner_is_connected_get(&mut self, side: Side) -> Result<bool> {
+    pub async fn upgrade_keyscanner_is_connected(&mut self, side: Side) -> Result<bool> {
         self.command_response_bool(&format!("upgrade.keyscanner.isConnected {}", side as u8))
             .await
     }
 
-    /// Gets the status of the Keyscanner: is bootloader?
-    pub async fn upgrade_keyscanner_is_bootloader_get(&mut self, side: Side) -> Result<bool> {
+    pub async fn upgrade_keyscanner_is_bootloader(&mut self, side: Side) -> Result<bool> {
         self.command_response_bool(&format!("upgrade.keyscanner.isBootloader {}", side as u8))
             .await
     }
 
-    /// Gets the status of the Keyscanner: begin?
-    pub async fn upgrade_keyscanner_begin_get(&mut self, side: Side) -> Result<bool> {
+    pub async fn upgrade_keyscanner_begin(&mut self, side: Side) -> Result<bool> {
         self.command_response_bool(&format!("upgrade.keyscanner.begin {}", side as u8))
             .await
     }
 
     // TODO: upgrade.keyscanner.isReady
     // TODO: upgrade.keyscanner.getInfo
+
     // TODO: upgrade.keyscanner.sendWrite
+
     // TODO: upgrade.keyscanner.validate
     // TODO: upgrade.keyscanner.finish
     // TODO: upgrade.keyscanner.sendStart
@@ -516,7 +514,7 @@ impl Focus {
     /// Sets the color of all the LEDs.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledsetall
-    pub async fn led_all_set(&mut self, color: &RGB) -> Result<()> {
+    pub async fn led_all(&mut self, color: &RGB) -> Result<()> {
         self.command(&format!("led.setAll {} {} {}", color.r, color.g, color.b,))
             .await
     }
@@ -539,18 +537,18 @@ impl Focus {
         self.command(&format!("led.mode {}", mode as u8)).await
     }
 
-    /// Gets the LED brightness.
+    /// Gets the top LED brightness.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledbrightness
-    pub async fn led_brightness_get(&mut self) -> Result<u8> {
+    pub async fn led_brightness_top_get(&mut self) -> Result<u8> {
         self.command_response_numerical("led.brightness").await
     }
 
-    /// Sets the LED brightness.
+    /// Sets the top LED brightness.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledbrightness
-    pub async fn led_brightness_set(&mut self, brightness: u8) -> Result<()> {
-        if self.led_brightness_get().await? == brightness {
+    pub async fn led_brightness_top_set(&mut self, brightness: u8) -> Result<()> {
+        if self.led_brightness_top_get().await? == brightness {
             return Ok(());
         }
 
@@ -577,19 +575,19 @@ impl Focus {
             .await
     }
 
-    /// Gets the wireless LED brightness.
+    /// Gets the wireless top LED brightness.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledbrightness
-    pub async fn led_brightness_wireless_get(&mut self) -> Result<u8> {
+    pub async fn led_brightness_wireless_top_get(&mut self) -> Result<u8> {
         self.command_response_numerical("led.brightness.wireless")
             .await
     }
 
-    /// Sets the wireless LED brightness.
+    /// Sets the wireless top LED brightness.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledbrightness
-    pub async fn led_brightness_wireless_set(&mut self, brightness: u8) -> Result<()> {
-        if self.led_brightness_wireless_get().await? == brightness {
+    pub async fn led_brightness_wireless_top_set(&mut self, brightness: u8) -> Result<()> {
+        if self.led_brightness_wireless_top_get().await? == brightness {
             return Ok(());
         }
 
@@ -600,7 +598,7 @@ impl Focus {
     /// Gets the wireless underglow LED brightness.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledbrightnessug
-    pub async fn led_brightness_underglow_wireless_get(&mut self) -> Result<u8> {
+    pub async fn led_brightness_wireless_underglow_get(&mut self) -> Result<u8> {
         self.command_response_numerical("led.brightnessUG.wireless")
             .await
     }
@@ -608,8 +606,8 @@ impl Focus {
     /// Sets the wireless underglow LED brightness.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledbrightnessug
-    pub async fn led_brightness_underglow_wireless_set(&mut self, brightness: u8) -> Result<()> {
-        if self.led_brightness_underglow_wireless_get().await? == brightness {
+    pub async fn led_brightness_wireless_underglow_set(&mut self, brightness: u8) -> Result<()> {
+        if self.led_brightness_wireless_underglow_get().await? == brightness {
             return Ok(());
         }
 
@@ -863,7 +861,7 @@ impl Focus {
     }
 
     /// Gets the macros memory size in bytes.
-    pub async fn macros_memory_get(&mut self) -> Result<u16> {
+    pub async fn macros_memory(&mut self) -> Result<u16> {
         self.command_response_numerical("macros.memory").await
     }
 
@@ -1015,7 +1013,7 @@ impl Focus {
     /// The layer is -1 to Bazecor.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#layerisactive
-    pub async fn layer_is_active_get(&mut self, layer: u8) -> Result<bool> {
+    pub async fn layer_is_active(&mut self, layer: u8) -> Result<bool> {
         if layer > MAX_LAYERS {
             bail!("Layer out of range, max is {}: {}", MAX_LAYERS, layer);
         }
@@ -1041,7 +1039,7 @@ impl Focus {
     /// It will return a vector of bools with the respective index matching each layer, -1 from Bazecor.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#layerstate
-    pub async fn layer_state_get(&mut self) -> Result<Vec<bool>> {
+    pub async fn layer_state(&mut self) -> Result<Vec<bool>> {
         let response = self.command_response_string("layer.state").await?;
         let parts = response.split_whitespace().collect::<Vec<&str>>();
         let nums = parts.iter().map(|&part| part == "1").collect();
@@ -1123,7 +1121,7 @@ impl Focus {
     }
 
     /// Gets the sync pairing state.
-    pub async fn wireless_rf_sync_pairing_get(&mut self) -> Result<bool> {
+    pub async fn wireless_rf_sync_pairing(&mut self) -> Result<bool> {
         self.command_response_bool("wireless.rf.syncPairing").await
     }
 }
