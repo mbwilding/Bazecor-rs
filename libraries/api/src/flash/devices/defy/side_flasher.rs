@@ -27,7 +27,7 @@ fn prepare_chunks(firmware: &Firmware) -> Result<Vec<Vec<u8>>> {
         .par_chunks(data_size)
         .enumerate()
         .map(|(index, data)| {
-            // 8 bytes for offset and length, 4 bytes for CRC
+            // 8 bytes (Write action) + 256 bytes (Data) + 4 bytes (CRC) = 268 byte chunks
             let blob_size = 8 + data.len() + 4;
             let mut blob = Vec::with_capacity(blob_size);
 
