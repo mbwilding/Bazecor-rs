@@ -19,15 +19,20 @@ pub fn ask_connected_device(options: Vec<Device>) -> Result<Device> {
 pub fn ask_firmware(
     releases: Vec<FirmwareRelease>,
     hardware: &Hardware,
+    auto_latest: bool,
 ) -> Result<FirmwareRelease> {
     let hardware_name = hardware.info.product.to_string();
 
     let options = releases
         .into_iter()
         .filter(|release| release.name == hardware_name)
-        .collect();
+        .collect::<Vec<FirmwareRelease>>();
 
-    Ok(Select::new("Firmware?", options)
-        .with_help_message("Select the firmware you want to flash")
-        .prompt()?)
+    if auto_latest {
+        Ok(options[0].to_owned())
+    } else {
+        Ok(Select::new("Firmware?", options)
+            .with_help_message("Select the firmware you want to flash")
+            .prompt()?)
+    }
 }

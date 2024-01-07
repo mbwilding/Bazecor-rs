@@ -9,7 +9,7 @@ use tokio::join;
 
 const FW_MAJOR_VERSION: &str = "1.x";
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FirmwareRelease {
     pub name: String,
     pub version: String,
@@ -23,45 +23,45 @@ impl Display for FirmwareRelease {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FirmwareAsset {
     pub name: String,
     pub url: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Firmware {
     pub firmware: Vec<u8>,
     pub sides: Option<Vec<u8>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Ctx {
     pub device: Hardware,
     pub collected: Collected,
     pub allow_beta: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Collected {
     pub version: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GitHubRelease {
     pub name: String,
     pub body: String,
     pub assets: Vec<GitHubAsset>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GitHubAsset {
     pub name: String,
     #[serde(rename = "browser_download_url")]
     pub url: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GitHubInfo {
     pub firmwares: Vec<FirmwareRelease>,
     pub is_updated: bool,
