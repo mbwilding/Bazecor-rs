@@ -6,7 +6,7 @@ authors = ["Matthew Wilding <mbwilding@gmail.com>"]
 
 [dependencies]
 anyhow = "1.0"
-api = { path = "../../libraries/api" }
+dygma_api = { path = "../../libraries/api" }
 inquire = "0.6"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"

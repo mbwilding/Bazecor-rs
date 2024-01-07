@@ -1,11 +1,13 @@
 [package]
-name = "api"
+name = "dygma_api"
 version = "0.1.0"
 edition = "2021"
 authors = ["Matthew Wilding <mbwilding@gmail.com>"]
 
 [dependencies]
 anyhow = "1.0"
+chrono = "0.4"
+dirs = "5.0"
 dygma_focus = { path = "../focus" }
 hex = "0.4"
 log = "0.4"
