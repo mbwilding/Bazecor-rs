@@ -19,12 +19,6 @@ pub fn num_str_enum(input: TokenStream) -> TokenStream {
         quote! { #index_u8 => Ok(#name::#variant_name), }
     });
 
-    let value_arms = variants.iter().enumerate().map(|(index, variant)| {
-        let index_u8 = index as u8;
-        let variant_name = &variant.ident;
-        quote! { #name::#variant_name => #index_u8, }
-    });
-
     let error_name = quote::format_ident!("{}Error", name);
 
     let expanded = quote! {
@@ -55,14 +49,6 @@ pub fn num_str_enum(input: TokenStream) -> TokenStream {
                         _ => Err(#error_name::InvalidValue(num)),
                     },
                     Err(_) => Err(#error_name::InvalidString(s.to_string())),
-                }
-            }
-        }
-
-        impl #name {
-            pub fn value(&self) -> u8 {
-                match self {
-                    #(#value_arms)*
                 }
             }
         }

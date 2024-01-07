@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::{Focus, MAX_LAYERS};
 use anyhow::{anyhow, bail, Result};
-use log::trace;
+use log::debug;
 use std::str::FromStr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -10,7 +10,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 impl Focus {
     /// Sends a command to the device, with no response.
     async fn command(&mut self, command: &str) -> Result<()> {
-        trace!("Command TX: {}", command);
+        debug!("Command TX: {}", command);
 
         self.serial
             .write_all(format!("{}\n", command).as_bytes())
@@ -73,7 +73,7 @@ impl Focus {
         let response = std::str::from_utf8(trimmed_buffer)
             .map_err(|e| anyhow!("Failed to convert response to UTF-8 string: {:?}", e))?;
 
-        trace!("Command RX: {}", &response);
+        debug!("Command RX: {}", &response);
 
         Ok(response.to_string())
     }
@@ -294,20 +294,20 @@ impl Focus {
     // TODO: upgrade.end
 
     /// Gets the status of the Keyscanner: is connected?
-    pub async fn upgrade_keyscanner_is_connected_get(&mut self, side_id: &str) -> Result<bool> {
-        self.command_response_bool(&format!("upgrade.keyscanner.isConnected {}", side_id))
+    pub async fn upgrade_keyscanner_is_connected_get(&mut self, side: Side) -> Result<bool> {
+        self.command_response_bool(&format!("upgrade.keyscanner.isConnected {}", side as u8))
             .await
     }
 
     /// Gets the status of the Keyscanner: is bootloader?
-    pub async fn upgrade_keyscanner_is_bootloader_get(&mut self, side_id: &str) -> Result<bool> {
-        self.command_response_bool(&format!("upgrade.keyscanner.isBootloader {}", side_id))
+    pub async fn upgrade_keyscanner_is_bootloader_get(&mut self, side: Side) -> Result<bool> {
+        self.command_response_bool(&format!("upgrade.keyscanner.isBootloader {}", side as u8))
             .await
     }
 
     /// Gets the status of the Keyscanner: begin?
-    pub async fn upgrade_keyscanner_begin_get(&mut self, side_id: &str) -> Result<bool> {
-        self.command_response_bool(&format!("upgrade.keyscanner.begin {}", side_id))
+    pub async fn upgrade_keyscanner_begin_get(&mut self, side: Side) -> Result<bool> {
+        self.command_response_bool(&format!("upgrade.keyscanner.begin {}", side as u8))
             .await
     }
 
@@ -536,7 +536,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command(&format!("led.mode {}", &mode.value())).await
+        self.command(&format!("led.mode {}", mode as u8)).await
     }
 
     /// Gets the LED brightness.
@@ -1103,11 +1103,8 @@ impl Focus {
             return Ok(());
         }
 
-        self.command(&format!(
-            "wireless.rf.power {}",
-            &wireless_power_mode.value()
-        ))
-        .await
+        self.command(&format!("wireless.rf.power {}", wireless_power_mode as u8))
+            .await
     }
 
     /// Gets the RF channel hop state.
