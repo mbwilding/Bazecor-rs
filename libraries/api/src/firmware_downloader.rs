@@ -15,6 +15,7 @@ pub struct FirmwareRelease {
     pub version: String,
     pub body: String,
     pub assets: Vec<FirmwareAsset>,
+    pub beta: bool,
 }
 
 impl Display for FirmwareRelease {
@@ -52,7 +53,7 @@ pub struct GitHubRelease {
     pub name: String,
     pub body: String,
     #[serde(rename = "prerelease")]
-    pub pre_release: bool,
+    pub beta: bool,
     pub assets: Vec<GitHubAsset>,
 }
 
@@ -114,8 +115,9 @@ pub async fn github_read(context: Ctx) -> Result<GitHubInfo> {
         });
     }
 
-    let is_updated = context.collected.version == final_releases[0].version;
-    let is_beta = context.collected.version.contains("beta");
+    let latest = &final_releases[0];
+    let is_updated = context.collected.version == latest.version;
+    let is_beta = latest.beta;
 
     Ok(GitHubInfo {
         firmwares: final_releases,
@@ -143,7 +145,8 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
             }
             let name = release_data[0].to_string();
             let version = release_data[1].to_string();
-            if !allow_beta && (release.pre_release || version.contains("beta")) {
+            let is_beta = release.beta || version.contains("-beta");
+            if !allow_beta && is_beta {
                 return None;
             }
             Some(FirmwareRelease {
@@ -158,6 +161,7 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
                         url: asset.url,
                     })
                     .collect(),
+                beta: is_beta,
             })
         })
         .collect();
