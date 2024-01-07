@@ -29,15 +29,15 @@ fn prepare_chunks(firmware: &Firmware) -> Result<Vec<Vec<u8>>> {
         .map(|(index, data)| {
             // 8 bytes (Write action) + 256 bytes (Data) + 4 bytes (CRC) = 268 byte chunks
             let blob_size = 8 + data.len() + 4;
-            let mut blob = Vec::with_capacity(blob_size);
+            let mut chuck = Vec::with_capacity(blob_size);
 
             // Write action (offset, chunk length)
             let offset = (index * data_size) as u32;
-            blob.extend_from_slice(&offset.to_le_bytes());
-            blob.extend_from_slice(&(data.len() as u32).to_le_bytes());
+            chuck.extend_from_slice(&offset.to_le_bytes());
+            chuck.extend_from_slice(&(data.len() as u32).to_le_bytes());
 
             // Add the data chunk
-            blob.extend_from_slice(data);
+            chuck.extend_from_slice(data);
 
             // Calculate and add CRC32 (SIMD calculation)
             let crc = {
@@ -45,9 +45,9 @@ fn prepare_chunks(firmware: &Firmware) -> Result<Vec<Vec<u8>>> {
                 hasher.update(data);
                 hasher.finalize().to_le_bytes()
             };
-            blob.extend_from_slice(&crc);
+            chuck.extend_from_slice(&crc);
 
-            blob
+            chuck
         })
         .collect();
 
