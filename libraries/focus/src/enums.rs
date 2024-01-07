@@ -46,8 +46,8 @@ pub enum WirelessPowerMode {
 }
 
 /// The device side.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, NumStrEnum)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Side {
-    Left = 0,
-    Right = 1,
+    Right = 0,
+    Left = 1,
 }
