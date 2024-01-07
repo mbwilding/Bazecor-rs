@@ -17,31 +17,32 @@ pub async fn prepare_neuron(device: &Device) -> Result<()> {
 }
 
 // TODO: Just fleshing out the idea of parallel processing chunks
+#[allow(dead_code)]
 fn prepare_chunks(firmware: &Firmware) -> Result<Vec<Vec<u8>>> {
-    let chunk_size = 256;
+    let data_size = 256;
 
-    let data = firmware.sides.as_deref().context("No firmware sides")?;
+    let bytes = firmware.sides.as_deref().context("No firmware sides")?;
 
-    let chunks = data
-        .par_chunks(chunk_size)
+    let chunks = bytes
+        .par_chunks(data_size)
         .enumerate()
-        .map(|(index, chunk)| {
+        .map(|(index, data)| {
             // 8 bytes for offset and length, 4 bytes for CRC
-            let blob_size = 8 + chunk.len() + 4;
+            let blob_size = 8 + data.len() + 4;
             let mut blob = Vec::with_capacity(blob_size);
 
             // Write action (offset, chunk length)
-            let offset = (index * chunk_size) as u32;
+            let offset = (index * data_size) as u32;
             blob.extend_from_slice(&offset.to_le_bytes());
-            blob.extend_from_slice(&(chunk.len() as u32).to_le_bytes());
+            blob.extend_from_slice(&(data.len() as u32).to_le_bytes());
 
             // Add the data chunk
-            blob.extend_from_slice(chunk);
+            blob.extend_from_slice(data);
 
-            // Calculate and add CRC
+            // Calculate and add CRC32 (SIMD calculation)
             let crc = {
                 let mut hasher = Hasher::new();
-                hasher.update(chunk);
+                hasher.update(data);
                 hasher.finalize().to_le_bytes()
             };
             blob.extend_from_slice(&crc);
