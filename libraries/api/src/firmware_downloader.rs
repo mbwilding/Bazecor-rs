@@ -51,6 +51,8 @@ pub struct Collected {
 pub struct GitHubRelease {
     pub name: String,
     pub body: String,
+    #[serde(rename = "prerelease")]
+    pub pre_release: bool,
     pub assets: Vec<GitHubAsset>,
 }
 
@@ -141,7 +143,7 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
             }
             let name = release_data[0].to_string();
             let version = release_data[1].to_string();
-            if !allow_beta && version.contains("beta") {
+            if !allow_beta && (release.pre_release || version.contains("beta")) {
                 return None;
             }
             Some(FirmwareRelease {

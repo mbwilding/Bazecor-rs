@@ -49,8 +49,8 @@ async fn main() -> Result<()> {
     let use_latest = cli.latest.unwrap_or(false);
     let firmware_release = ask_firmware(firmware_releases, &device.hardware, use_latest)?;
     info!(
-        "Release: {}\n{}",
-        &firmware_release.version, &firmware_release.body
+        "Release: {} {}\n{}",
+        &firmware_release.name, &firmware_release.version, &firmware_release.body
     );
     let _firmware = dygma_api::firmware_downloader::download_firmware(
         "default",
