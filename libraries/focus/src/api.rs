@@ -17,31 +17,93 @@ impl Focus {
     }
 
     /// Sends a command to the device.
-    async fn command_raw(&mut self, command: &str, suffix: Option<char>) -> Result<()> {
+    async fn command_raw(
+        &mut self,
+        command: &str,
+        suffix: Option<char>,
+        wait_for_response: bool,
+    ) -> Result<()> {
         debug!("Command TX: {}", command);
 
         if let Some(char) = suffix {
             self.write_bytes(format!("{}{}", command, char).as_bytes())
-                .await
+                .await?;
         } else {
-            self.write_bytes(command.as_bytes()).await
+            self.write_bytes(command.as_bytes()).await?;
         }
+
+        if wait_for_response {
+            let _response = self.response().await?;
+            // It's not necessary to do anything with the response, but we need to wait for it.
+        }
+
+        Ok(())
     }
 
     /// Sends a command to the device, with a single new line ending.
-    async fn command_new_line(&mut self, command: &str) -> Result<()> {
-        self.command_raw(command, Some('\n')).await
+    async fn command_new_line(&mut self, command: &str, wait_for_response: bool) -> Result<()> {
+        self.command_raw(command, Some('\n'), wait_for_response)
+            .await
     }
 
     /// Sends a command to the device, with a single whitespace ending.
     async fn command_whitespace(&mut self, command: &str) -> Result<()> {
-        self.command_raw(command, Some(' ')).await
+        self.command_raw(command, Some(' '), false).await
     }
 
     /// Sends a command to the device, and returns the response as a string.
     async fn command_response_string(&mut self, command: &str) -> Result<String> {
-        self.command_new_line(command).await?;
+        self.command_new_line(command, false).await?;
 
+        self.response().await
+    }
+
+    /// Sends a command to the device, and returns the response as a numerical value.
+    async fn command_response_numerical<T>(&mut self, command: &str) -> Result<T>
+    where
+        T: FromStr,
+        <T as FromStr>::Err: std::fmt::Debug,
+    {
+        let response = self.command_response_string(command).await?;
+        response
+            .parse::<T>()
+            .map_err(|e| anyhow!("Failed to parse response: {:?}", e))
+    }
+
+    /// Sends a command to the device, and returns the response as a duration.
+    async fn command_response_duration(
+        &mut self,
+        command: &str,
+        time_unit: TimeUnit,
+    ) -> Result<Duration> {
+        let response = self.command_response_numerical(command).await?;
+
+        let duration = match time_unit {
+            TimeUnit::Milliseconds => Duration::from_millis(response),
+            TimeUnit::Seconds => Duration::from_secs(response),
+        };
+
+        Ok(duration)
+    }
+
+    /// Sends a command to the device, and returns the response as a boolean value.
+    async fn command_response_bool(&mut self, command: &str) -> Result<bool> {
+        let response = self.command_response_string(command).await?;
+        Ok(response == "1" || response == "true")
+    }
+
+    /// Sends a command to the device, and returns the response as a vector of strings.
+    async fn command_response_vec_string(&mut self, command: &str) -> Result<Vec<String>> {
+        Ok(self
+            .command_response_string(command)
+            .await?
+            .lines()
+            .map(|line| line.replace('\r', ""))
+            .collect())
+    }
+
+    /// Response from serial port
+    async fn response(&mut self) -> Result<String> {
         let eof_marker = b"\r\n.\r\n";
 
         self.response_buffer.clear();
@@ -94,53 +156,13 @@ impl Focus {
         let response = std::str::from_utf8(trimmed_buffer)
             .map_err(|e| anyhow!("Failed to convert response to UTF-8 string: {:?}", e))?;
 
-        debug!("Command RX: {}", &response);
+        if !response.is_empty() {
+            debug!("Command RX: {}", &response);
+        } else {
+            debug!("Command RX: [Ack]");
+        }
 
         Ok(response.to_string())
-    }
-
-    /// Sends a command to the device, and returns the response as a numerical value.
-    async fn command_response_numerical<T>(&mut self, command: &str) -> Result<T>
-    where
-        T: FromStr,
-        <T as FromStr>::Err: std::fmt::Debug,
-    {
-        let response = self.command_response_string(command).await?;
-        response
-            .parse::<T>()
-            .map_err(|e| anyhow!("Failed to parse response: {:?}", e))
-    }
-
-    /// Sends a command to the device, and returns the response as a duration.
-    async fn command_response_duration(
-        &mut self,
-        command: &str,
-        time_unit: TimeUnit,
-    ) -> Result<Duration> {
-        let response = self.command_response_numerical(command).await?;
-
-        let duration = match time_unit {
-            TimeUnit::Milliseconds => Duration::from_millis(response),
-            TimeUnit::Seconds => Duration::from_secs(response),
-        };
-
-        Ok(duration)
-    }
-
-    /// Sends a command to the device, and returns the response as a boolean value.
-    async fn command_response_bool(&mut self, command: &str) -> Result<bool> {
-        let response = self.command_response_string(command).await?;
-        Ok(response == "1" || response == "true")
-    }
-
-    /// Sends a command to the device, and returns the response as a vector of strings.
-    async fn command_response_vec_string(&mut self, command: &str) -> Result<Vec<String>> {
-        Ok(self
-            .command_response_string(command)
-            .await?
-            .lines()
-            .map(|line| line.replace('\r', ""))
-            .collect())
     }
 }
 
@@ -172,7 +194,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("keymap.custom {}", data))
+        self.command_new_line(&format!("keymap.custom {}", data), true)
             .await
     }
 
@@ -195,7 +217,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("keymap.default {}", data))
+        self.command_new_line(&format!("keymap.default {}", data), true)
             .await
     }
 
@@ -220,7 +242,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("keymap.onlyCustom {}", state as u8))
+        self.command_new_line(&format!("keymap.onlyCustom {}", state as u8), true)
             .await
     }
 
@@ -246,7 +268,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("settings.defaultLayer {}", layer))
+        self.command_new_line(&format!("settings.defaultLayer {}", layer), true)
             .await
     }
 
@@ -272,7 +294,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("settings.version {}", version))
+        self.command_new_line(&format!("settings.version {}", version), true)
             .await
     }
 
@@ -298,7 +320,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("eeprom.contents {}", data))
+        self.command_new_line(&format!("eeprom.contents {}", data), true)
             .await
     }
 
@@ -312,7 +334,7 @@ impl Focus {
     // TODO: upgrade.start
 
     pub async fn upgrade_neuron(&mut self) -> Result<()> {
-        self.command_new_line("upgrade.neuron").await
+        self.command_new_line("upgrade.neuron", true).await
     }
 
     // TODO: upgrade.end
@@ -367,7 +389,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.map {}", data))
+        self.command_new_line(&format!("superkeys.map {}", data), true)
             .await
     }
 
@@ -401,8 +423,11 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.waitfor {}", &duration.as_millis()))
-            .await
+        self.command_new_line(
+            &format!("superkeys.waitfor {}", &duration.as_millis()),
+            true,
+        )
+        .await
     }
 
     /// Gets the Superkeys timeout of how long it waits for the next tap.
@@ -421,8 +446,11 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.timeout {}", &duration.as_millis()))
-            .await
+        self.command_new_line(
+            &format!("superkeys.timeout {}", &duration.as_millis()),
+            true,
+        )
+        .await
     }
 
     /// Gets the Superkeys repeat duration.
@@ -445,7 +473,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.repeat {}", &duration.as_millis()))
+        self.command_new_line(&format!("superkeys.repeat {}", &duration.as_millis()), true)
             .await
     }
 
@@ -469,8 +497,11 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.holdstart {}", &duration.as_millis()))
-            .await
+        self.command_new_line(
+            &format!("superkeys.holdstart {}", &duration.as_millis()),
+            true,
+        )
+        .await
     }
 
     /// Gets the Superkeys overlap percentage.
@@ -496,7 +527,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.overlap {}", percentage))
+        self.command_new_line(&format!("superkeys.overlap {}", percentage), true)
             .await
     }
 
@@ -533,10 +564,10 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!(
-            "led.at {} {} {} {}",
-            led, color.r, color.g, color.b
-        ))
+        self.command_new_line(
+            &format!("led.at {} {} {} {}", led, color.r, color.g, color.b),
+            true,
+        )
         .await
     }
 
@@ -544,8 +575,11 @@ impl Focus {
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledsetall
     pub async fn led_all(&mut self, color: &RGB) -> Result<()> {
-        self.command_new_line(&format!("led.setAll {} {} {}", color.r, color.g, color.b,))
-            .await
+        self.command_new_line(
+            &format!("led.setAll {} {} {}", color.r, color.g, color.b,),
+            true,
+        )
+        .await
     }
 
     /// Gets the LED mode.
@@ -563,7 +597,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.mode {}", mode as u8))
+        self.command_new_line(&format!("led.mode {}", mode as u8), true)
             .await
     }
 
@@ -582,7 +616,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.brightness {}", brightness))
+        self.command_new_line(&format!("led.brightness {}", brightness), true)
             .await
     }
 
@@ -601,7 +635,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.brightnessUG {}", brightness))
+        self.command_new_line(&format!("led.brightnessUG {}", brightness), true)
             .await
     }
 
@@ -621,7 +655,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.brightness.wireless {}", brightness))
+        self.command_new_line(&format!("led.brightness.wireless {}", brightness), true)
             .await
     }
 
@@ -641,7 +675,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.brightnessUG.wireless {}", brightness))
+        self.command_new_line(&format!("led.brightnessUG.wireless {}", brightness), true)
             .await
     }
 
@@ -656,7 +690,8 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.fade {}", fade)).await
+        self.command_new_line(&format!("led.fade {}", fade), true)
+            .await
     }
 
     /// Gets the LED theme.
@@ -674,7 +709,8 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.theme {}", data)).await
+        self.command_new_line(&format!("led.theme {}", data), true)
+            .await
     }
 
     /// Gets the palette.
@@ -696,7 +732,8 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("palette {}", data)).await
+        self.command_new_line(&format!("palette {}", data), true)
+            .await
     }
 
     /// Gets the color map.
@@ -718,7 +755,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("colormap.map {}", data))
+        self.command_new_line(&format!("colormap.map {}", data), true)
             .await
     }
 
@@ -733,7 +770,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("idleleds.true_sleep {}", state as u8))
+        self.command_new_line(&format!("idleleds.true_sleep {}", state as u8), true)
             .await
     }
 
@@ -755,7 +792,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("idleleds.true_sleep_time {}", seconds))
+        self.command_new_line(&format!("idleleds.true_sleep_time {}", seconds), true)
             .await
     }
 
@@ -781,7 +818,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("idleleds.time_limit {}", seconds))
+        self.command_new_line(&format!("idleleds.time_limit {}", seconds), true)
             .await
     }
 
@@ -796,7 +833,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("idleleds.wireless {}", state as u8))
+        self.command_new_line(&format!("idleleds.wireless {}", state as u8), true)
             .await
     }
 
@@ -813,7 +850,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("hardware.version {}", data))
+        self.command_new_line(&format!("hardware.version {}", data), true)
             .await
     }
 
@@ -840,8 +877,11 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("qukeys.holdTimeout {}", &duration.as_millis()))
-            .await
+        self.command_new_line(
+            &format!("qukeys.holdTimeout {}", &duration.as_millis()),
+            true,
+        )
+        .await
     }
 
     /// Gets the Qukeys overlap threshold.
@@ -860,10 +900,10 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!(
-            "qukeys.overlapThreshold {}",
-            &duration.as_millis()
-        ))
+        self.command_new_line(
+            &format!("qukeys.overlapThreshold {}", &duration.as_millis()),
+            true,
+        )
         .await
     }
 
@@ -882,14 +922,15 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("macros.map {}", data)).await
+        self.command_new_line(&format!("macros.map {}", data), true)
+            .await
     }
 
     /// Triggers a macro.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#macrostrigger
     pub async fn macros_trigger(&mut self, macro_id: u8) -> Result<()> {
-        self.command_new_line(&format!("macros.trigger {}", macro_id))
+        self.command_new_line(&format!("macros.trigger {}", macro_id), true)
             .await
     }
 
@@ -920,7 +961,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.speed {}", speed))
+        self.command_new_line(&format!("mouse.speed {}", speed), true)
             .await
     }
 
@@ -936,7 +977,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.speedDelay {}", &duration.as_millis()))
+        self.command_new_line(&format!("mouse.speedDelay {}", &duration.as_millis()), true)
             .await
     }
 
@@ -951,7 +992,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.accelSpeed {}", speed))
+        self.command_new_line(&format!("mouse.accelSpeed {}", speed), true)
             .await
     }
 
@@ -967,7 +1008,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.accelDelay {}", &duration.as_millis()))
+        self.command_new_line(&format!("mouse.accelDelay {}", &duration.as_millis()), true)
             .await
     }
 
@@ -982,7 +1023,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.wheelSpeed {}", speed))
+        self.command_new_line(&format!("mouse.wheelSpeed {}", speed), true)
             .await
     }
 
@@ -998,7 +1039,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.wheelDelay {}", &duration.as_millis()))
+        self.command_new_line(&format!("mouse.wheelDelay {}", &duration.as_millis()), true)
             .await
     }
 
@@ -1013,7 +1054,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("mouse.speedLimit {}", limit))
+        self.command_new_line(&format!("mouse.speedLimit {}", limit), true)
             .await
     }
 
@@ -1025,7 +1066,7 @@ impl Focus {
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#layeractivate
     pub async fn layer_activate(&mut self, layer: u8) -> Result<()> {
-        self.command_new_line(&format!("layer.activate {}", layer))
+        self.command_new_line(&format!("layer.activate {}", layer), true)
             .await
     }
 
@@ -1040,11 +1081,11 @@ impl Focus {
             if layer > MAX_LAYERS {
                 bail!("Layer out of range, max is {}: {}", MAX_LAYERS, layer);
             }
-            self.command_new_line(&format!("layer.deactivate {}", layer))
+            self.command_new_line(&format!("layer.deactivate {}", layer), true)
                 .await?
         }
 
-        self.command_new_line("layer.deactivate").await
+        self.command_new_line("layer.deactivate", true).await
     }
 
     /// Gets the state of the provided layer.
@@ -1070,7 +1111,7 @@ impl Focus {
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#layermoveto
     pub async fn layer_move_to(&mut self, layer: u8) -> Result<()> {
-        self.command_new_line(&format!("layer.moveTo {}", layer))
+        self.command_new_line(&format!("layer.moveTo {}", layer), true)
             .await
     }
 
@@ -1123,8 +1164,11 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("wireless.battery.savingMode {}", state as u8))
-            .await
+        self.command_new_line(
+            &format!("wireless.battery.savingMode {}", state as u8),
+            true,
+        )
+        .await
     }
 
     /// Gets the RF power level.
@@ -1141,8 +1185,11 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("wireless.rf.power {}", wireless_power_mode as u8))
-            .await
+        self.command_new_line(
+            &format!("wireless.rf.power {}", wireless_power_mode as u8),
+            true,
+        )
+        .await
     }
 
     /// Gets the RF channel hop state.
@@ -1156,7 +1203,7 @@ impl Focus {
             return Ok(());
         }
 
-        self.command_new_line(&format!("wireless.rf.channelHop {}", state as u8))
+        self.command_new_line(&format!("wireless.rf.channelHop {}", state as u8), true)
             .await
     }
 
