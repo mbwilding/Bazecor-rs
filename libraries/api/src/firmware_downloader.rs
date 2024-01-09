@@ -43,7 +43,7 @@ pub struct Firmware {
 pub struct FirmwareNode {
     pub name: String,
     pub bytes: Vec<u8>,
-    pub hex: Option<String>,
+    pub hex_raw: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -265,7 +265,7 @@ pub async fn obtain_firmware_file(firmware_file_name: &str, url: &str) -> Result
         let firmware_node = FirmwareNode {
             name: firmware_file_name.to_string(),
             bytes,
-            hex: Some(firmware.to_string()),
+            hex_raw: Some(text),
         };
 
         Ok(firmware_node)
@@ -274,7 +274,7 @@ pub async fn obtain_firmware_file(firmware_file_name: &str, url: &str) -> Result
         let firmware_node = FirmwareNode {
             name: firmware_file_name.to_string(),
             bytes,
-            hex: None,
+            hex_raw: None,
         };
 
         Ok(firmware_node)
