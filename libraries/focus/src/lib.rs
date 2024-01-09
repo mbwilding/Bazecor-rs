@@ -2,16 +2,17 @@ use crate::hardware::Device;
 use anyhow::{anyhow, bail, Result};
 use log::{error, trace};
 use std::str;
-use tokio::sync::Mutex;
 use std::time::Duration;
+use tokio::sync::Mutex;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialPortType, SerialStream};
 
 pub mod api;
 pub mod color;
-pub mod configuration;
 pub mod enums;
 pub mod hardware;
+pub(crate) mod helpers;
 pub mod prelude;
+pub mod settings;
 
 pub const MAX_LAYERS: u8 = 10 - 1;
 

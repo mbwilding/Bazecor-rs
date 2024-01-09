@@ -1,3 +1,4 @@
+use crate::helpers::*;
 use crate::prelude::*;
 use crate::{Focus, MAX_LAYERS};
 use anyhow::{anyhow, bail, Result};
@@ -14,6 +15,136 @@ impl Focus {
         let mut stream = self.stream.lock().await;
         stream.write_all(bytes).await?;
         stream.flush().await?;
+
+        Ok(())
+    }
+
+    /// Gets the settings from the device.
+    pub async fn dygma_settings_get(&mut self) -> Result<Settings> {
+        Ok(Settings {
+            keymap_custom: self.keymap_custom_get().await?,
+            keymap_default: self.keymap_default_get().await?,
+            keymap_only_custom: self.keymap_only_custom_get().await?,
+            settings_default_layer: self.settings_default_layer_get().await?,
+            superkeys_map: self.superkeys_map_get().await?,
+            superkeys_wait_for: self.superkeys_wait_for_get().await?,
+            superkeys_timeout: self.superkeys_timeout_get().await?,
+            superkeys_repeat: self.superkeys_repeat_get().await?,
+            superkeys_hold_start: self.superkeys_hold_start_get().await?,
+            superkeys_overlap: self.superkeys_overlap_get().await?,
+            led_mode: self.led_mode_get().await?,
+            led_brightness_top: self.led_brightness_top_get().await?,
+            led_brightness_underglow: self.led_brightness_underglow_get().await.ok(),
+            led_brightness_wireless_top: self.led_brightness_wireless_top_get().await.ok(),
+            led_brightness_wireless_underglow: self
+                .led_brightness_wireless_underglow_get()
+                .await
+                .ok(),
+            led_fade: self.led_fade_get().await.ok(),
+            led_theme: self.led_theme_get().await?,
+            palette: self.palette_get().await?,
+            color_map: self.color_map_get().await?,
+            led_idle_true_sleep: self.led_idle_true_sleep_get().await.ok(),
+            led_idle_true_sleep_time: self.led_idle_true_sleep_time_get().await.ok(),
+            led_idle_time_limit: self.led_idle_time_limit_get().await?,
+            led_idle_wireless: self.led_idle_wireless_get().await.ok(),
+            qukeys_hold_timeout: self.qukeys_hold_timeout_get().await?,
+            qukeys_overlap_threshold: self.qukeys_overlap_threshold_get().await?,
+            macros_map: self.macros_map_get().await?,
+            mouse_speed: self.mouse_speed_get().await?,
+            mouse_delay: self.mouse_delay_get().await?,
+            mouse_acceleration_speed: self.mouse_acceleration_speed_get().await?,
+            mouse_acceleration_delay: self.mouse_acceleration_delay_get().await?,
+            mouse_wheel_speed: self.mouse_wheel_speed_get().await?,
+            mouse_wheel_delay: self.mouse_wheel_delay_get().await?,
+            mouse_speed_limit: self.mouse_speed_limit_get().await?,
+            wireless_battery_saving_mode: self.wireless_battery_saving_mode_get().await.ok(),
+            wireless_rf_power_level: self.wireless_rf_power_level_get().await.ok(),
+            wireless_rf_channel_hop: self.wireless_rf_channel_hop_get().await.ok(),
+        })
+    }
+
+    /// Sets the settings for the device.
+    pub async fn dygma_settings_set(&mut self, settings: &Settings) -> Result<()> {
+        self.keymap_custom_set(&settings.keymap_custom).await?;
+        self.keymap_default_set(&settings.keymap_default).await?;
+        self.keymap_only_custom_set(settings.keymap_only_custom)
+            .await?;
+        self.settings_default_layer_set(settings.settings_default_layer)
+            .await?;
+        self.superkeys_map_set(&settings.superkeys_map).await?;
+        self.superkeys_wait_for_set(settings.superkeys_wait_for)
+            .await?;
+        self.superkeys_timeout_set(settings.superkeys_timeout)
+            .await?;
+        self.superkeys_repeat_set(settings.superkeys_repeat).await?;
+        self.superkeys_hold_start_set(settings.superkeys_hold_start)
+            .await?;
+        self.superkeys_overlap_set(settings.superkeys_overlap)
+            .await?;
+        self.led_mode_set(settings.led_mode).await?;
+        self.led_brightness_top_set(settings.led_brightness_top)
+            .await?;
+        if let Some(led_brightness_underglow) = settings.led_brightness_underglow {
+            self.led_brightness_underglow_set(led_brightness_underglow)
+                .await?;
+        }
+        if let Some(led_brightness_wireless_top) = settings.led_brightness_wireless_top {
+            self.led_brightness_wireless_top_set(led_brightness_wireless_top)
+                .await?;
+        }
+        if let Some(led_brightness_wireless_underglow) = settings.led_brightness_wireless_underglow
+        {
+            self.led_brightness_wireless_underglow_set(led_brightness_wireless_underglow)
+                .await?;
+        }
+        if let Some(led_fade) = settings.led_fade {
+            self.led_fade_set(led_fade).await?;
+        }
+        self.led_theme_set(&settings.led_theme).await?;
+        self.palette_set(&settings.palette).await?;
+        self.color_map_set(&settings.color_map).await?;
+        if let Some(led_idle_true_sleep) = settings.led_idle_true_sleep {
+            self.led_idle_true_sleep_set(led_idle_true_sleep).await?;
+        }
+        if let Some(led_idle_true_sleep_time) = settings.led_idle_true_sleep_time {
+            self.led_idle_true_sleep_time_set(led_idle_true_sleep_time)
+                .await?;
+        }
+        self.led_idle_time_limit_set(settings.led_idle_time_limit)
+            .await?;
+        if let Some(led_idle_wireless) = settings.led_idle_wireless {
+            self.led_idle_wireless_set(led_idle_wireless).await?;
+        }
+        self.qukeys_hold_timeout_set(settings.qukeys_hold_timeout)
+            .await?;
+        self.qukeys_overlap_threshold_set(settings.qukeys_overlap_threshold)
+            .await?;
+        self.macros_map_set(&settings.macros_map).await?;
+        self.mouse_speed_set(settings.mouse_speed).await?;
+        self.mouse_delay_set(settings.mouse_delay).await?;
+        self.mouse_acceleration_speed_set(settings.mouse_acceleration_speed)
+            .await?;
+        self.mouse_acceleration_delay_set(settings.mouse_acceleration_delay)
+            .await?;
+        self.mouse_wheel_speed_set(settings.mouse_wheel_speed)
+            .await?;
+        self.mouse_wheel_delay_set(settings.mouse_wheel_delay)
+            .await?;
+        self.mouse_speed_limit_set(settings.mouse_speed_limit)
+            .await?;
+        if let Some(wireless_battery_saving_mode) = settings.wireless_battery_saving_mode {
+            self.wireless_battery_saving_mode_set(wireless_battery_saving_mode)
+                .await?;
+        }
+        if let Some(wireless_rf_power_level) = settings.wireless_rf_power_level {
+            self.wireless_rf_power_level_set(wireless_rf_power_level)
+                .await?;
+        }
+        if let Some(wireless_rf_channel_hop) = settings.wireless_rf_channel_hop {
+            self.wireless_rf_channel_hop_set(wireless_rf_channel_hop)
+                .await?;
+        }
 
         Ok(())
     }
@@ -188,8 +319,10 @@ impl Focus {
     /// Layers 0 and above, The layers are -1 to Bazecor.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#keymapcustom
-    pub async fn keymap_custom_get(&mut self) -> Result<String> {
-        self.command_response_string("keymap.custom").await
+    pub async fn keymap_custom_get(&mut self) -> Result<Vec<u16>> {
+        let data = self.command_response_string("keymap.custom").await?;
+
+        string_to_numerical_vec(&data)
     }
 
     /// Sets the whole custom keymap stored in the keyboard.
@@ -197,13 +330,16 @@ impl Focus {
     /// Layers 0 and above, The layers are -1 to Bazecor.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#keymapcustom
-    pub async fn keymap_custom_set(&mut self, data: &str) -> Result<()> {
+    pub async fn keymap_custom_set(&mut self, data: &[u16]) -> Result<()> {
         if self.keymap_custom_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("keymap.custom {}", data), true)
-            .await
+        self.command_new_line(
+            &format!("keymap.custom {}", &numerical_vec_to_string(data)),
+            true,
+        )
+        .await
     }
 
     /// Gets the default keymap stored in the keyboard.
