@@ -8,6 +8,9 @@ use std::fmt::Display;
 use tokio::join;
 
 const FW_MAJOR_VERSION: &str = "1.x";
+const USER_AGENT: &str = "Bazecor-Rust";
+const GITHUB_USER: &str = "Dygmalab";
+const GITHUB_REPOSITORY: &str = "Firmware-release";
 
 #[derive(Debug, Clone)]
 pub struct FirmwareRelease {
@@ -129,8 +132,11 @@ pub async fn github_read(context: Ctx) -> Result<GitHubInfo> {
 pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<FirmwareRelease>> {
     let client = reqwest::Client::new();
     let response = client
-        .get("https://api.github.com/repos/Dygmalab/Firmware-release/releases")
-        .header("User-Agent", "Bazecor-Rust")
+        .get(format!(
+            "https://api.github.com/repos/{}/{}/releases",
+            GITHUB_USER, GITHUB_REPOSITORY
+        ))
+        .header("User-Agent", USER_AGENT)
         .send()
         .await?;
 
@@ -247,11 +253,11 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>>
 
     let response = client
         .get(url)
-        .header("User-Agent", "Bazecor-Rust")
+        .header("User-Agent", USER_AGENT)
         .send()
         .await?;
 
-    debug!("Downloading firmware file: {}", url);
+    debug!("Downloading firmware [{}]: {}", file_type, url);
 
     if file_type.ends_with(".hex") {
         let text = response.text().await?;
@@ -259,7 +265,6 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>>
         let cleaned_text = re.replace_all(&text, "");
         let parts: Vec<&str> = cleaned_text.split(':').skip(1).collect();
         let firmware = &parts.join("");
-        trace!("Firmware Hex: {}", firmware);
         let bytes = hex::decode(firmware)?;
         Ok(bytes)
     } else {
