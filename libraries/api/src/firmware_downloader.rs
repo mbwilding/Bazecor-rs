@@ -178,14 +178,28 @@ pub async fn load_available_firmware_versions(allow_beta: bool) -> Result<Vec<Fi
 }
 
 pub async fn download_firmware(
-    type_selected: &str,
     hardware: &Hardware,
     firmware_release: &FirmwareRelease,
 ) -> Result<Firmware> {
-    if type_selected == "default" {
-        match hardware.info.product {
-            Product::Raise => {
-                let file_type_fw = "firmware.hex";
+    match hardware.info.product {
+        Product::Raise => {
+            let file_type_fw = "firmware.hex";
+            let matched = firmware_release
+                .assets
+                .iter()
+                .find(|asset| asset.name == file_type_fw)
+                .context("Firmware not found")?;
+
+            let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
+
+            Ok(Firmware {
+                firmware: fw,
+                sides: None,
+            })
+        }
+        _ => match hardware.info.device_type {
+            DeviceType::Wireless => {
+                let file_type_fw = "Wireless_neuron.hex";
                 let matched = firmware_release
                     .assets
                     .iter()
@@ -194,58 +208,39 @@ pub async fn download_firmware(
 
                 let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
 
-                return Ok(Firmware {
+                Ok(Firmware {
                     firmware: fw,
                     sides: None,
-                });
+                })
             }
-            _ => match hardware.info.device_type {
-                DeviceType::Wireless => {
-                    let file_type_fw = "Wireless_neuron.hex";
-                    let matched = firmware_release
-                        .assets
-                        .iter()
-                        .find(|asset| asset.name == file_type_fw)
-                        .context("Firmware not found")?;
+            DeviceType::Wired => {
+                let file_type_fw = "Wired_neuron.uf2";
+                let matched_fw = firmware_release
+                    .assets
+                    .iter()
+                    .find(|asset| asset.name == file_type_fw)
+                    .context("Firmware not found")?;
 
-                    let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
+                let file_type_fw_sides = "keyscanner.bin";
+                let matched_sides = firmware_release
+                    .assets
+                    .iter()
+                    .find(|asset| asset.name == file_type_fw_sides)
+                    .context("Firmware sides not found")?;
 
-                    return Ok(Firmware {
-                        firmware: fw,
-                        sides: None,
-                    });
-                }
-                DeviceType::Wired => {
-                    let file_type_fw = "Wired_neuron.uf2";
-                    let matched_fw = firmware_release
-                        .assets
-                        .iter()
-                        .find(|asset| asset.name == file_type_fw)
-                        .context("Firmware not found")?;
+                let (firmware, sides) = join!(
+                    obtain_firmware_file(file_type_fw, &matched_fw.url),
+                    obtain_firmware_file(file_type_fw_sides, &matched_sides.url)
+                );
 
-                    let file_type_fw_sides = "keyscanner.bin";
-                    let matched_sides = firmware_release
-                        .assets
-                        .iter()
-                        .find(|asset| asset.name == file_type_fw_sides)
-                        .context("Firmware sides not found")?;
-
-                    let (firmware, sides) = join!(
-                        obtain_firmware_file(file_type_fw, &matched_fw.url),
-                        obtain_firmware_file(file_type_fw_sides, &matched_sides.url)
-                    );
-
-                    return Ok(Firmware {
-                        firmware: firmware?,
-                        sides: Some(sides?),
-                    });
-                }
-                _ => bail!("Invalid device type"),
-            },
-        }
+                Ok(Firmware {
+                    firmware: firmware?,
+                    sides: Some(sides?),
+                })
+            }
+            _ => bail!("Invalid device type"),
+        },
     }
-
-    bail!("Invalid firmware type")
 }
 
 pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>> {
@@ -261,14 +256,16 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>>
 
     if file_type.ends_with(".hex") {
         let text = response.text().await?;
-        let re = Regex::new(r"[\r\n]+")?;
-        let cleaned_text = re.replace_all(&text, "");
-        let parts: Vec<&str> = cleaned_text.split(':').skip(1).collect();
+        let regex = Regex::new(r"[\r\n]+")?;
+        let single_line = regex.replace_all(&text, "");
+        let parts: Vec<&str> = single_line.split(':').skip(1).collect();
         let firmware = &parts.join("");
         let bytes = hex::decode(firmware)?;
+
         Ok(bytes)
     } else {
-        let bytes = response.bytes().await?;
-        Ok(bytes.to_vec())
+        let bytes = response.bytes().await?.to_vec();
+
+        Ok(bytes)
     }
 }

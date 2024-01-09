@@ -6,16 +6,21 @@ use std::str::FromStr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-/// Private methods
+/// Public methods
 impl Focus {
     /// Writes bytes to the serial port.
-    async fn write_bytes(&mut self, bytes: &[u8]) -> Result<()> {
+    pub async fn dygma_write_bytes(&mut self, bytes: &[u8]) -> Result<()> {
         trace!("Writing bytes: {:02X?}", bytes);
-        self.serial.write_all(bytes).await?;
+        let mut stream = self.stream.lock().await;
+        stream.write_all(bytes).await?;
+        stream.flush().await?;
 
         Ok(())
     }
+}
 
+/// Private methods
+impl Focus {
     /// Sends a command to the device.
     async fn command_raw(
         &mut self,
@@ -26,10 +31,10 @@ impl Focus {
         debug!("Command TX: {}", command);
 
         if let Some(char) = suffix {
-            self.write_bytes(format!("{}{}", command, char).as_bytes())
+            self.dygma_write_bytes(format!("{}{}", command, char).as_bytes())
                 .await?;
         } else {
-            self.write_bytes(command.as_bytes()).await?;
+            self.dygma_write_bytes(command.as_bytes()).await?;
         }
 
         if wait_for_response {
@@ -111,11 +116,10 @@ impl Focus {
         loop {
             let prev_len = self.response_buffer.len();
             self.response_buffer.resize(prev_len + 1024, 0);
-            match self
-                .serial
-                .read(&mut self.response_buffer[prev_len..])
-                .await
-            {
+
+            let mut stream = self.stream.lock().await;
+
+            match stream.read(&mut self.response_buffer[prev_len..]).await {
                 Ok(0) => continue,
                 Ok(size) => {
                     self.response_buffer.truncate(prev_len + size);

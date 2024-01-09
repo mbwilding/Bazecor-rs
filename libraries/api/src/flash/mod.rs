@@ -7,11 +7,6 @@ use log::info;
 use serde::Serialize;
 use tokio::fs;
 
-pub trait Flasher {
-    /// Takes a backup of the device settings and saves a backup file.
-    fn backup_settings(&self) -> Result<()>;
-}
-
 /// Formats date for create name of backup file.
 ///
 /// Example output: "2019-07-12-19_40_56"

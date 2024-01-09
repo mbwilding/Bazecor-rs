@@ -63,12 +63,9 @@ async fn main() -> Result<()> {
         "Release: {} {}\n{}",
         &firmware_release.name, &firmware_release.version, &firmware_release.body
     );
-    let firmware = dygma_api::firmware_downloader::download_firmware(
-        "default",
-        &device.hardware,
-        &firmware_release,
-    )
-    .await?;
+    let firmware =
+        dygma_api::firmware_downloader::download_firmware(&device.hardware, &firmware_release)
+            .await?;
     debug!("Firmware downloaded successfully");
 
     if firmware.sides.is_some() {
@@ -86,7 +83,7 @@ async fn main() -> Result<()> {
     // TODO: Flash
 
     // TODO: This is just testing Focus changes
-    let mut focus = Focus::new_via_device(&device).await?;
+    let mut focus = Focus::new_via_device(&device)?;
     let _version = focus.version().await?;
     focus.layer_move_to(0).await?;
 

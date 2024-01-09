@@ -2,6 +2,7 @@ use crate::hardware::Device;
 use anyhow::{anyhow, bail, Result};
 use log::{error, trace};
 use std::str;
+use tokio::sync::Mutex;
 use std::time::Duration;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialPortType, SerialStream};
 
@@ -16,7 +17,7 @@ pub const MAX_LAYERS: u8 = 10 - 1;
 
 /// The Dygma Focus API.
 pub struct Focus {
-    pub(crate) serial: SerialStream,
+    pub(crate) stream: Mutex<SerialStream>,
     pub(crate) response_buffer: Vec<u8>,
 }
 
@@ -93,7 +94,7 @@ impl Focus {
     }
 
     /// Creates a new instance of the Focus API, connecting to the device via the named serial port.
-    pub async fn new_via_port(port: &str) -> Result<Self> {
+    pub fn new_via_port(port: &str) -> Result<Self> {
         let port_settings = tokio_serial::new(port, 115_200)
             .data_bits(tokio_serial::DataBits::Eight)
             .flow_control(tokio_serial::FlowControl::None)
@@ -101,37 +102,36 @@ impl Focus {
             .stop_bits(tokio_serial::StopBits::One)
             .timeout(Duration::from_secs(5));
 
-        let mut serial = port_settings.open_native_async().map_err(|e| {
+        let mut stream = port_settings.open_native_async().map_err(|e| {
             let err_msg = format!("Failed to open serial port: {} ({:?})", &port, e);
             error!("{}", err_msg);
             anyhow!(err_msg)
         })?;
 
-        serial.write_data_terminal_ready(true)?;
+        stream.write_data_terminal_ready(true)?;
 
         #[cfg(unix)]
-        serial
+        stream
             .set_exclusive(false)
             .expect("Unable to set serial port exclusive to false");
 
         Ok(Self {
-            serial,
+            stream: Mutex::new(stream),
             response_buffer: Vec::with_capacity(4096),
         })
     }
 
     /// Creates a new instance of the Focus API, connecting to the device via a reference to the device struct.
-    pub async fn new_via_device(device: &Device) -> Result<Self> {
-        Self::new_via_port(&device.serial_port).await
+    pub fn new_via_device(device: &Device) -> Result<Self> {
+        Self::new_via_port(&device.serial_port)
     }
 
     /// Creates a new instance of the Focus API, connecting to the device via first available device.
-    pub async fn new_first_available() -> Result<Self> {
+    pub fn new_first_available() -> Result<Self> {
         Self::new_via_device(Self::find_all_devices()?.first().ok_or_else(|| {
             let err_msg = "No supported devices found";
             error!("{}", err_msg);
             anyhow!(err_msg)
         })?)
-        .await
     }
 }
