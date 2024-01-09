@@ -88,10 +88,5 @@ async fn main() -> Result<()> {
 
     // TODO: Flash
 
-    // TODO: This is just testing Focus changes
-    let mut focus = Focus::new_via_device(&device)?;
-    let _version = focus.version().await?;
-    focus.layer_move_to(0).await?;
-
     Ok(())
 }

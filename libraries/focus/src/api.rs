@@ -94,7 +94,11 @@ impl Focus {
     /// Sends a command to the device, and returns the response as a boolean value.
     async fn command_response_bool(&mut self, command: &str) -> Result<bool> {
         let response = self.command_response_string(command).await?;
-        Ok(response == "1" || response == "true")
+        if response.is_empty() {
+            bail!("Empty response");
+        } else {
+            Ok(response == "1" || response == "true")
+        }
     }
 
     /// Sends a command to the device, and returns the response as a vector of strings.
