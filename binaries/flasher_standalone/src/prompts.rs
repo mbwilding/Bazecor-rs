@@ -1,5 +1,6 @@
 use anyhow::Result;
 use dygma_api::firmware_downloader::FirmwareRelease;
+use dygma_focus::hardware::types::hardware_physical;
 use dygma_focus::hardware::{Device, Hardware};
 use inquire::{Confirm, Select};
 
@@ -14,6 +15,14 @@ pub fn ask_connected_device(options: Vec<Device>) -> Result<Device> {
     Ok(Select::new("Which connected device?", options)
         .with_help_message("Select the connected device")
         .prompt()?)
+}
+
+pub fn ask_hardware() -> Result<Hardware> {
+    Ok(
+        Select::new("Device?", hardware_physical::DEVICES_PHYSICAL.to_vec())
+            .with_help_message("Select the product")
+            .prompt()?,
+    )
 }
 
 pub fn ask_firmware(

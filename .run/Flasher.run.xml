@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Flasher" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --bin flasher_standalone" />
+    <option name="command" value="run --bin flasher_standalone -- --beta true --latest true --debug true" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
@@ -10,7 +10,7 @@
     <option name="buildTarget" value="REMOTE" />
     <option name="backtrace" value="SHORT" />
     <envs>
-      <env name="RUST_LOG" value="debug,hyper=off,reqwest=off,mio_serial=off" />
+      <env name="RUST_LOG" value="debug,hyper=off,reqwest=off,mio=off,mio_serial=off" />
     </envs>
     <option name="isRedirectInput" value="false" />
     <option name="redirectInputPath" value="" />

@@ -8,7 +8,7 @@
     <arguments value="dev" />
     <node-interpreter value="project" />
     <envs>
-      <env name="RUST_LOG" value="debug,hyper=off,reqwest=off,mio_serial=off" />
+      <env name="RUST_LOG" value="debug,hyper=off,reqwest=off,mio=off,mio_serial=off" />
     </envs>
     <method v="2" />
   </configuration>

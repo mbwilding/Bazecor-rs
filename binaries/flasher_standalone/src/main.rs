@@ -4,6 +4,8 @@ mod prompts;
 use crate::prompts::*;
 use anyhow::Result;
 use clap::Parser;
+use dygma_api::flash::devices::defy::side_flasher::prepare_chunks;
+use dygma_focus::hardware::Device;
 use dygma_focus::Focus;
 use tracing::{debug, error, info};
 
@@ -14,6 +16,8 @@ struct Cli {
     beta: Option<bool>,
     #[clap(short, long)]
     latest: Option<bool>,
+    #[clap(short, long)]
+    debug: Option<bool>,
 }
 
 #[tokio::main]
@@ -22,14 +26,21 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    let devices = Focus::find_all_devices()?;
-    let device = match devices.len() {
-        0 => {
-            error!("No devices found, please connect a device and try again");
-            std::process::exit(1);
+    let device = if !cli.debug.unwrap_or(false) {
+        let devices = Focus::find_all_devices()?;
+        match devices.len() {
+            0 => {
+                error!("No devices found, please connect a device and try again");
+                std::process::exit(1);
+            }
+            1 => devices[0].clone(),
+            _ => ask_connected_device(devices)?,
         }
-        1 => devices[0].clone(),
-        _ => ask_connected_device(devices)?,
+    } else {
+        Device {
+            hardware: ask_hardware()?,
+            serial_port: "debug".to_string(),
+        }
     };
 
     debug!(
@@ -52,13 +63,25 @@ async fn main() -> Result<()> {
         "Release: {} {}\n{}",
         &firmware_release.name, &firmware_release.version, &firmware_release.body
     );
-    let _firmware = dygma_api::firmware_downloader::download_firmware(
+    let firmware = dygma_api::firmware_downloader::download_firmware(
         "default",
         &device.hardware,
         &firmware_release,
     )
     .await?;
     debug!("Firmware downloaded successfully");
+
+    if firmware.sides.is_some() {
+        let chunks = prepare_chunks(&firmware)?;
+        debug!(
+            "Firmware side chunks prepared successfully: {} chunks",
+            chunks.len()
+        );
+    }
+
+    if cli.debug.unwrap_or(false) {
+        return Ok(());
+    }
 
     // TODO: Flash
 
