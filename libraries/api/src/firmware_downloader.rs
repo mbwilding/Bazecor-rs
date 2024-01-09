@@ -201,14 +201,14 @@ pub async fn download_firmware(
 }
 
 async fn download_firmware_raise(firmware_release: &FirmwareRelease) -> Result<Firmware> {
-    let file_type_fw = "firmware.hex";
+    let firmware_file = "firmware.hex";
     let matched = firmware_release
         .assets
         .iter()
-        .find(|asset| asset.name == file_type_fw)
+        .find(|asset| asset.name == firmware_file)
         .context("Firmware not found")?;
 
-    let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
+    let fw = obtain_firmware_file(firmware_file, &matched.url).await?;
 
     Ok(Firmware {
         firmware: fw,
@@ -220,23 +220,22 @@ async fn download_firmware_defy(
     firmware_release: &FirmwareRelease,
     firmware_file_name: &str,
 ) -> Result<Firmware> {
-    let file_type_fw = firmware_file_name;
     let matched_fw = firmware_release
         .assets
         .iter()
-        .find(|asset| asset.name == file_type_fw)
+        .find(|asset| asset.name == firmware_file_name)
         .context("Firmware not found")?;
 
-    let file_type_fw_sides = "keyscanner.bin";
+    let firmware_sides_file_name = "keyscanner.bin";
     let matched_sides = firmware_release
         .assets
         .iter()
-        .find(|asset| asset.name == file_type_fw_sides)
+        .find(|asset| asset.name == firmware_sides_file_name)
         .context("Firmware sides not found")?;
 
     let (firmware, sides) = join!(
-        obtain_firmware_file(file_type_fw, &matched_fw.url),
-        obtain_firmware_file(file_type_fw_sides, &matched_sides.url)
+        obtain_firmware_file(firmware_file_name, &matched_fw.url),
+        obtain_firmware_file(firmware_sides_file_name, &matched_sides.url)
     );
 
     Ok(Firmware {
@@ -245,7 +244,7 @@ async fn download_firmware_defy(
     })
 }
 
-pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<FirmwareNode> {
+pub async fn obtain_firmware_file(firmware_file_name: &str, url: &str) -> Result<FirmwareNode> {
     let client = reqwest::Client::new();
 
     let response = client
@@ -254,9 +253,9 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Firmware
         .send()
         .await?;
 
-    debug!("Downloading firmware [{}]: {}", file_type, url);
+    debug!("Downloading firmware [{}]: {}", firmware_file_name, url);
 
-    if file_type.ends_with(".hex") {
+    if firmware_file_name.ends_with(".hex") {
         let text = response.text().await?;
         let regex = Regex::new(r"[\r\n]+")?;
         let single_line = regex.replace_all(&text, "");
@@ -264,7 +263,7 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Firmware
         let firmware = &parts.join("");
         let bytes = hex::decode(firmware)?;
         let firmware_node = FirmwareNode {
-            name: file_type.to_string(),
+            name: firmware_file_name.to_string(),
             bytes,
             hex: Some(firmware.to_string()),
         };
@@ -273,7 +272,7 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Firmware
     } else {
         let bytes = response.bytes().await?.to_vec();
         let firmware_node = FirmwareNode {
-            name: file_type.to_string(),
+            name: firmware_file_name.to_string(),
             bytes,
             hex: None,
         };
