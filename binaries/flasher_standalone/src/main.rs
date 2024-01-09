@@ -66,14 +66,11 @@ async fn main() -> Result<()> {
     let firmware =
         dygma_api::firmware_downloader::download_firmware(&device.hardware, &firmware_release)
             .await?;
-    debug!("Firmware downloaded successfully");
+    debug!("Firmware downloaded");
 
     if let Some(sides) = firmware.sides {
         let chunks = prepare_chunks(&sides)?;
-        debug!(
-            "Firmware side chunks prepared successfully: {} chunks",
-            chunks.len()
-        );
+        debug!("Firmware side chunks prepared: {} chunks", chunks.len());
     }
 
     if cli.debug.unwrap_or(false) {
