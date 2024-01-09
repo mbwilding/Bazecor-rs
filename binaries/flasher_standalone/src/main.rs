@@ -4,7 +4,6 @@ mod prompts;
 use crate::prompts::*;
 use anyhow::Result;
 use clap::Parser;
-use dygma_api::flash::devices::defy::side_flasher::prepare_chunks;
 use dygma_focus::hardware::Device;
 use dygma_focus::Focus;
 use tracing::{debug, error, info};
@@ -63,13 +62,23 @@ async fn main() -> Result<()> {
         "Release: {} {}\n{}",
         &firmware_release.name, &firmware_release.version, &firmware_release.body
     );
-    let firmware =
+    let firmwares =
         dygma_api::firmware_downloader::download_firmware(&device.hardware, &firmware_release)
             .await?;
     debug!("Firmware downloaded");
 
-    if let Some(sides) = firmware.sides {
-        let chunks = prepare_chunks(&sides)?;
+    // Testing firmware hex parse
+    if let Some(hex_raw) = firmwares.firmware.hex_raw {
+        let _hex_decoded =
+            dygma_api::flash::devices::defy::nrf52833_flasher::Flasher::ihex_decode_lines(
+                &hex_raw,
+            )?;
+        debug!("Firmware hex decoded: {} lines", _hex_decoded.len());
+    }
+
+    // Testing firmware side chunking
+    if let Some(sides) = firmwares.sides {
+        let chunks = dygma_api::flash::devices::defy::side_flasher::prepare_chunks(&sides)?;
         debug!("Firmware side chunks prepared: {} chunks", chunks.len());
     }
 
