@@ -1,14 +1,14 @@
-use crate::firmware_downloader::Firmware;
-use anyhow::{Context, Result};
+use crate::firmware_downloader::FirmwareNode;
+use anyhow::Result;
 use crc32fast::Hasher;
 use rayon::prelude::*;
 
-pub fn prepare_chunks(firmware: &Firmware) -> Result<Vec<Vec<u8>>> {
+pub fn prepare_chunks(firmware: &FirmwareNode) -> Result<Vec<Vec<u8>>> {
     let data_size = 256;
 
-    let bytes = firmware.sides.as_deref().context("No firmware sides")?;
+    let firmware_sides = &firmware.bytes;
 
-    let chunks = bytes
+    let chunks = firmware_sides
         .par_chunks(data_size)
         .enumerate()
         .map(|(index, data)| {

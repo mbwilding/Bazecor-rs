@@ -19,24 +19,9 @@ impl Flasher {
         })
     }
 
-    pub async fn write(&mut self, buffer: Vec<u8>) -> Result<()> {
-        let mut total = buffer.len();
-        let mut buffer_total = 0;
-
-        while buffer_total < buffer.len() {
-            let buffer_size = {
-                if buffer_total < WRITE_SIZE {
-                    total
-                } else {
-                    WRITE_SIZE
-                }
-            };
-
-            let buffer_slice = &buffer[buffer_total..buffer_total + buffer_size];
-            self.focus.dygma_write_bytes(buffer_slice).await?;
-
-            buffer_total += buffer_size;
-            total -= buffer_size;
+    pub async fn write(&mut self, buffer: &[u8]) -> Result<()> {
+        for chunk in buffer.chunks(WRITE_SIZE) {
+            self.focus.dygma_write_bytes(chunk).await?;
         }
 
         Ok(())

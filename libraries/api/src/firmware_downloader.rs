@@ -35,8 +35,15 @@ pub struct FirmwareAsset {
 
 #[derive(Debug, Clone)]
 pub struct Firmware {
-    pub firmware: Vec<u8>,
-    pub sides: Option<Vec<u8>>,
+    pub firmware: FirmwareNode,
+    pub sides: Option<FirmwareNode>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FirmwareNode {
+    pub name: String,
+    pub bytes: Vec<u8>,
+    pub hex: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -182,68 +189,63 @@ pub async fn download_firmware(
     firmware_release: &FirmwareRelease,
 ) -> Result<Firmware> {
     match hardware.info.product {
-        Product::Raise => {
-            let file_type_fw = "firmware.hex";
-            let matched = firmware_release
-                .assets
-                .iter()
-                .find(|asset| asset.name == file_type_fw)
-                .context("Firmware not found")?;
-
-            let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
-
-            Ok(Firmware {
-                firmware: fw,
-                sides: None,
-            })
-        }
-        _ => match hardware.info.device_type {
+        Product::Raise => download_firmware_raise(firmware_release).await,
+        Product::Defy => match hardware.info.device_type {
             DeviceType::Wireless => {
-                let file_type_fw = "Wireless_neuron.hex";
-                let matched = firmware_release
-                    .assets
-                    .iter()
-                    .find(|asset| asset.name == file_type_fw)
-                    .context("Firmware not found")?;
-
-                let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
-
-                Ok(Firmware {
-                    firmware: fw,
-                    sides: None,
-                })
+                download_firmware_defy(firmware_release, "Wireless_neuron.hex").await
             }
-            DeviceType::Wired => {
-                let file_type_fw = "Wired_neuron.uf2";
-                let matched_fw = firmware_release
-                    .assets
-                    .iter()
-                    .find(|asset| asset.name == file_type_fw)
-                    .context("Firmware not found")?;
-
-                let file_type_fw_sides = "keyscanner.bin";
-                let matched_sides = firmware_release
-                    .assets
-                    .iter()
-                    .find(|asset| asset.name == file_type_fw_sides)
-                    .context("Firmware sides not found")?;
-
-                let (firmware, sides) = join!(
-                    obtain_firmware_file(file_type_fw, &matched_fw.url),
-                    obtain_firmware_file(file_type_fw_sides, &matched_sides.url)
-                );
-
-                Ok(Firmware {
-                    firmware: firmware?,
-                    sides: Some(sides?),
-                })
-            }
+            DeviceType::Wired => download_firmware_defy(firmware_release, "Wired_neuron.uf2").await,
             _ => bail!("Invalid device type"),
         },
     }
 }
 
-pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>> {
+async fn download_firmware_raise(firmware_release: &FirmwareRelease) -> Result<Firmware> {
+    let file_type_fw = "firmware.hex";
+    let matched = firmware_release
+        .assets
+        .iter()
+        .find(|asset| asset.name == file_type_fw)
+        .context("Firmware not found")?;
+
+    let fw = obtain_firmware_file(file_type_fw, &matched.url).await?;
+
+    Ok(Firmware {
+        firmware: fw,
+        sides: None,
+    })
+}
+
+async fn download_firmware_defy(
+    firmware_release: &FirmwareRelease,
+    firmware_file_name: &str,
+) -> Result<Firmware> {
+    let file_type_fw = firmware_file_name;
+    let matched_fw = firmware_release
+        .assets
+        .iter()
+        .find(|asset| asset.name == file_type_fw)
+        .context("Firmware not found")?;
+
+    let file_type_fw_sides = "keyscanner.bin";
+    let matched_sides = firmware_release
+        .assets
+        .iter()
+        .find(|asset| asset.name == file_type_fw_sides)
+        .context("Firmware sides not found")?;
+
+    let (firmware, sides) = join!(
+        obtain_firmware_file(file_type_fw, &matched_fw.url),
+        obtain_firmware_file(file_type_fw_sides, &matched_sides.url)
+    );
+
+    Ok(Firmware {
+        firmware: firmware?,
+        sides: Some(sides?),
+    })
+}
+
+pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<FirmwareNode> {
     let client = reqwest::Client::new();
 
     let response = client
@@ -261,11 +263,21 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>>
         let parts: Vec<&str> = single_line.split(':').skip(1).collect();
         let firmware = &parts.join("");
         let bytes = hex::decode(firmware)?;
+        let firmware_node = FirmwareNode {
+            name: file_type.to_string(),
+            bytes,
+            hex: Some(firmware.to_string()),
+        };
 
-        Ok(bytes)
+        Ok(firmware_node)
     } else {
         let bytes = response.bytes().await?.to_vec();
+        let firmware_node = FirmwareNode {
+            name: file_type.to_string(),
+            bytes,
+            hex: None,
+        };
 
-        Ok(bytes)
+        Ok(firmware_node)
     }
 }

@@ -68,8 +68,8 @@ async fn main() -> Result<()> {
             .await?;
     debug!("Firmware downloaded successfully");
 
-    if firmware.sides.is_some() {
-        let chunks = prepare_chunks(&firmware)?;
+    if let Some(sides) = firmware.sides {
+        let chunks = prepare_chunks(&sides)?;
         debug!(
             "Firmware side chunks prepared successfully: {} chunks",
             chunks.len()
