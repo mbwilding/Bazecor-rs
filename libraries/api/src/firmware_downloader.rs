@@ -253,21 +253,17 @@ pub async fn obtain_firmware_file(file_type: &str, url: &str) -> Result<Vec<u8>>
 
     debug!("Downloading firmware file: {}", url);
 
-    match file_type {
-        "keyscanner.bin" | "Wired_neuron.uf2" => {
-            let bytes = response.bytes().await?;
-            Ok(bytes.to_vec())
-        }
-        "Wireless_neuron.hex" | "firmware.hex" => {
-            let text = response.text().await?;
-            let re = Regex::new(r"[\r\n]+")?;
-            let cleaned_text = re.replace_all(&text, "");
-            let parts: Vec<&str> = cleaned_text.split(':').skip(1).collect();
-            let firmware = &parts.join("");
-            trace!("Firmware Hex: {}", firmware);
-            let bytes = hex::decode(firmware)?;
-            Ok(bytes)
-        }
-        _ => bail!("Invalid firmware file type"),
+    if file_type.ends_with(".hex") {
+        let text = response.text().await?;
+        let re = Regex::new(r"[\r\n]+")?;
+        let cleaned_text = re.replace_all(&text, "");
+        let parts: Vec<&str> = cleaned_text.split(':').skip(1).collect();
+        let firmware = &parts.join("");
+        trace!("Firmware Hex: {}", firmware);
+        let bytes = hex::decode(firmware)?;
+        Ok(bytes)
+    } else {
+        let bytes = response.bytes().await?;
+        Ok(bytes.to_vec())
     }
 }
