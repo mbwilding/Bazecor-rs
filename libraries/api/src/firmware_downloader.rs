@@ -231,7 +231,7 @@ pub async fn download_firmware(
 
                     return Ok(Firmware {
                         firmware: firmware?,
-                        sides: sides.ok(),
+                        sides: Some(sides?),
                     });
                 }
                 _ => bail!("Invalid device type"),
