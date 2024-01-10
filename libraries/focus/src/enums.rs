@@ -11,11 +11,11 @@ pub(crate) enum TimeUnit {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, NumStrEnum)]
 pub enum LedMode {
     /// The default mode. The LEDs will be set to the color of the layer you are on.
-    PerLayer = 0,
-    /// Multi-colored rainbow effect.
-    RainbowMulti = 1,
-    /// Single-colored rainbow effect.
-    RainbowSingle = 2,
+    Layer = 0,
+    /// Rainbow effect.
+    Rainbow = 1,
+    /// Cycle colors.
+    Cycle = 2,
     /// All LEDs will be off until pressed, they will light up when pressed and cycle colors back to off.
     Stalker = 3,
     /// All LEDs to red.
@@ -28,10 +28,10 @@ pub enum LedMode {
     White = 7,
     /// All LEDs to off.
     Off = 8,
-    /// The inner three LEDs on both sides will be green, the rest will be off.
-    GreenInner = 9,
-    /// Emulates the bluetooth connect sequence.
-    Bluetooth = 10,
+    // /// The inner three LEDs on both sides will be green, the rest will be off.
+    // GreenInner = 9,
+    // /// Emulates the bluetooth connect sequence.
+    // Bluetooth = 10,
 }
 
 /// The wireless power mode states.
