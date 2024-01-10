@@ -42,7 +42,8 @@ impl Focus {
                 .ok(),
             led_fade: self.led_fade_get().await.ok(),
             led_theme: self.led_theme_get().await?,
-            palette: self.palette_get().await?,
+            palette_rgb: self.palette_rgb_get().await.ok(),
+            palette_rgbw: self.palette_rgbw_get().await.ok(),
             color_map: self.color_map_get().await?,
             led_idle_true_sleep: self.led_idle_true_sleep_get().await.ok(),
             led_idle_true_sleep_time: self.led_idle_true_sleep_time_get().await.ok(),
@@ -102,7 +103,12 @@ impl Focus {
             self.led_fade_set(led_fade).await?;
         }
         self.led_theme_set(&settings.led_theme).await?;
-        self.palette_set(&settings.palette).await?;
+        if let Some(palette) = &settings.palette_rgb {
+            self.palette_rgb_set(palette).await?;
+        }
+        if let Some(palette) = &settings.palette_rgbw {
+            self.palette_rgbw_set(palette).await?;
+        }
         self.color_map_set(&settings.color_map).await?;
         if let Some(led_idle_true_sleep) = settings.led_idle_true_sleep {
             self.led_idle_true_sleep_set(led_idle_true_sleep).await?;
@@ -258,6 +264,7 @@ impl Focus {
                 Ok(0) => continue,
                 Ok(size) => {
                     self.response_buffer.truncate(prev_len + size);
+                    self.response_buffer.retain(|&x| x != 0);
 
                     trace!("Received bytes: {:02X?}", &self.response_buffer[..size]);
 
@@ -336,7 +343,7 @@ impl Focus {
         }
 
         self.command_new_line(
-            &format!("keymap.custom {}", &numerical_vec_to_string(data)),
+            &format!("keymap.custom {}", numerical_vec_to_string(data)),
             true,
         )
         .await
@@ -347,8 +354,10 @@ impl Focus {
     /// Layers -1 and -2, the layers are -1 to Bazecor.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#keymapdefault
-    pub async fn keymap_default_get(&mut self) -> Result<String> {
-        self.command_response_string("keymap.default").await
+    pub async fn keymap_default_get(&mut self) -> Result<Vec<u16>> {
+        let data = self.command_response_string("keymap.default").await?;
+
+        string_to_numerical_vec(&data)
     }
 
     /// Sets the default keymap stored in the keyboard.
@@ -356,13 +365,16 @@ impl Focus {
     /// Layers -1 and -2, the layers are -1 to Bazecor.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#keymapdefault
-    pub async fn keymap_default_set(&mut self, data: &str) -> Result<()> {
+    pub async fn keymap_default_set(&mut self, data: &[u16]) -> Result<()> {
         if self.keymap_default_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("keymap.default {}", data), true)
-            .await
+        self.command_new_line(
+            &format!("keymap.default {}", numerical_vec_to_string(data)),
+            true,
+        )
+        .await
     }
 
     /// Gets the user setting of hiding the default layers.
@@ -517,8 +529,10 @@ impl Focus {
     /// To know more about keycodes and to find the right one for your actions, check the key map database.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#superkeysmap
-    pub async fn superkeys_map_get(&mut self) -> Result<String> {
-        self.command_response_string("superkeys.map").await
+    pub async fn superkeys_map_get(&mut self) -> Result<Vec<u16>> {
+        let data = self.command_response_string("superkeys.map").await?;
+
+        string_to_numerical_vec(&data)
     }
 
     /// Sets the Superkeys map.
@@ -528,13 +542,16 @@ impl Focus {
     /// To know more about keycodes and to find the right one for your actions, check the key map database.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#superkeysmap
-    pub async fn superkeys_map_set(&mut self, data: &str) -> Result<()> {
+    pub async fn superkeys_map_set(&mut self, data: &[u16]) -> Result<()> {
         if self.superkeys_map_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("superkeys.map {}", data), true)
-            .await
+        self.command_new_line(
+            &format!("superkeys.map {}", numerical_vec_to_string(data)),
+            true,
+        )
+        .await
     }
 
     /// Gets the Superkeys wait for duration.
@@ -841,42 +858,71 @@ impl Focus {
     /// Gets the LED theme.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledtheme
-    pub async fn led_theme_get(&mut self) -> Result<String> {
-        self.command_response_string("led.theme").await
+    pub async fn led_theme_get(&mut self) -> Result<Vec<RGB>> {
+        let data = self.command_response_string("led.theme").await?;
+
+        string_to_rgb_vec(&data)
     }
 
     /// Sets the LED theme.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#ledtheme
-    pub async fn led_theme_set(&mut self, data: &str) -> Result<()> {
+    pub async fn led_theme_set(&mut self, data: &[RGB]) -> Result<()> {
         if self.led_theme_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("led.theme {}", data), true)
+        self.command_new_line(&format!("led.theme {}", &rgb_vec_to_string(data)), true)
             .await
     }
 
-    /// Gets the palette.
+    /// Gets the palette as RGB.
     ///
     /// The color palette is used by the color map to establish each color that can be assigned to the keyboard.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#palette
-    pub async fn palette_get(&mut self) -> Result<String> {
-        self.command_response_string("palette").await
+    pub async fn palette_rgb_get(&mut self) -> Result<Vec<RGB>> {
+        let data = self.command_response_string("palette").await?;
+
+        string_to_rgb_vec(&data)
     }
 
-    /// Sets the palette.
+    /// Sets the palette as RGB.
     ///
     /// The color palette is used by the color map to establish each color that can be assigned to the keyboard.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#palette
-    pub async fn palette_set(&mut self, data: &str) -> Result<()> {
-        if self.palette_get().await? == data {
+    pub async fn palette_rgb_set(&mut self, data: &[RGB]) -> Result<()> {
+        if self.palette_rgb_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("palette {}", data), true)
+        self.command_new_line(&format!("palette {}", rgb_vec_to_string(data)), true)
+            .await
+    }
+
+    /// Gets the palette as RGBW.
+    ///
+    /// The color palette is used by the color map to establish each color that can be assigned to the keyboard.
+    ///
+    /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#palette
+    pub async fn palette_rgbw_get(&mut self) -> Result<Vec<RGBW>> {
+        let data = self.command_response_string("palette").await?;
+
+        string_to_rgbw_vec(&data)
+    }
+
+    /// Sets the palette as RGBW.
+    ///
+    /// The color palette is used by the color map to establish each color that can be assigned to the keyboard.
+    ///
+    /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#palette
+    pub async fn palette_rgbw_set(&mut self, data: &[RGBW]) -> Result<()> {
+        if self.palette_rgbw_get().await? == data {
+            return Ok(());
+        }
+
+        self.command_new_line(&format!("palette {}", rgbw_vec_to_string(data)), true)
             .await
     }
 
@@ -885,8 +931,10 @@ impl Focus {
     /// This command reads the color map that assigns each color listed in the palette to individual LEDs, mapping them to the keyboard's current layout.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#colormapmap
-    pub async fn color_map_get(&mut self) -> Result<String> {
-        self.command_response_string("colormap.map").await
+    pub async fn color_map_get(&mut self) -> Result<Vec<u8>> {
+        let data = self.command_response_string("colormap.map").await?;
+
+        string_to_numerical_vec(&data)
     }
 
     /// Sets the color map.
@@ -894,13 +942,16 @@ impl Focus {
     /// This command writes the color map that assigns each color listed in the palette to individual LEDs, mapping them to the keyboard's current layout.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#colormapmap
-    pub async fn color_map_set(&mut self, data: &str) -> Result<()> {
+    pub async fn color_map_set(&mut self, data: &[u8]) -> Result<()> {
         if self.color_map_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("colormap.map {}", data), true)
-            .await
+        self.command_new_line(
+            &format!("colormap.map {}", numerical_vec_to_string(data)),
+            true,
+        )
+        .await
     }
 
     /// Gets the idle LED true sleep state.
@@ -1054,20 +1105,25 @@ impl Focus {
     /// Gets the macros map.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#macrosmap
-    pub async fn macros_map_get(&mut self) -> Result<String> {
-        self.command_response_string("macros.map").await
+    pub async fn macros_map_get(&mut self) -> Result<Vec<u8>> {
+        let data = self.command_response_string("macros.map").await?;
+
+        string_to_numerical_vec(&data)
     }
 
     /// Sets the macros map.
     ///
     /// https://github.com/Dygmalab/Bazecor/blob/development/FOCUS_API.md#macrosmap
-    pub async fn macros_map_set(&mut self, data: &str) -> Result<()> {
+    pub async fn macros_map_set(&mut self, data: &[u8]) -> Result<()> {
         if self.macros_map_get().await? == data {
             return Ok(());
         }
 
-        self.command_new_line(&format!("macros.map {}", data), true)
-            .await
+        self.command_new_line(
+            &format!("macros.map {}", numerical_vec_to_string(data)),
+            true,
+        )
+        .await
     }
 
     /// Triggers a macro.

@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
     // TODO: This is just testing Focus changes
     let mut focus = Focus::new_via_device(&device)?;
     let settings = focus.dygma_settings_get().await?;
-    println!("Settings: {:#?}", settings);
+    println!("Settings: {:?}", settings);
 
     Ok(())
 }

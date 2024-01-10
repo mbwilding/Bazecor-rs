@@ -118,7 +118,7 @@ impl Focus {
 
         Ok(Self {
             stream: Mutex::new(stream),
-            response_buffer: Vec::with_capacity(4096),
+            response_buffer: Vec::with_capacity(1_024 * 8),
         })
     }
 
