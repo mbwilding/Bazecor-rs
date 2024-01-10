@@ -10,7 +10,7 @@ use tracing::trace;
 /// Public methods
 impl Focus {
     /// Writes bytes to the serial port.
-    pub async fn dygma_write_bytes(&mut self, bytes: &[u8]) -> Result<()> {
+    pub async fn write_bytes(&mut self, bytes: &[u8]) -> Result<()> {
         trace!("Writing bytes: {:02X?}", bytes);
         let mut stream = self.stream.lock().await;
         stream.write_all(bytes).await?;
@@ -21,7 +21,7 @@ impl Focus {
 
     /// Gets the settings from the device.
     #[tracing::instrument(skip(self))]
-    pub async fn dygma_settings_get(&mut self) -> Result<Settings> {
+    pub async fn settings_get(&mut self) -> Result<Settings> {
         Ok(Settings {
             keymap_custom: self.keymap_custom_get().await?,
             keymap_default: self.keymap_default_get().await?,
@@ -68,7 +68,7 @@ impl Focus {
 
     /// Sets the settings for the device.
     #[tracing::instrument(skip(self, settings))]
-    pub async fn dygma_settings_set(&mut self, settings: &Settings) -> Result<()> {
+    pub async fn settings_set(&mut self, settings: &Settings) -> Result<()> {
         self.keymap_custom_set(&settings.keymap_custom).await?;
         self.keymap_default_set(&settings.keymap_default).await?;
         self.keymap_only_custom_set(settings.keymap_only_custom)
@@ -170,10 +170,10 @@ impl Focus {
         trace!("Command TX: {}", command);
 
         if let Some(char) = suffix {
-            self.dygma_write_bytes(format!("{}{}", command, char).as_bytes())
+            self.write_bytes(format!("{}{}", command, char).as_bytes())
                 .await?;
         } else {
-            self.dygma_write_bytes(command.as_bytes()).await?;
+            self.write_bytes(command.as_bytes()).await?;
         }
 
         if wait_for_response {

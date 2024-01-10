@@ -88,13 +88,5 @@ async fn main() -> Result<()> {
 
     // TODO: Flash
 
-    // TODO: This is just testing Focus changes
-    let mut focus = Focus::new_via_device(&device)?;
-    let _settings = focus.dygma_settings_get().await?;
-    // let json = serde_json::to_string(&settings)?;
-    // let mut file = File::create("settings.json").await?;
-    // file.write_all(json.as_bytes()).await?;
-    //focus.dygma_settings_set(&settings).await?;
-
     Ok(())
 }

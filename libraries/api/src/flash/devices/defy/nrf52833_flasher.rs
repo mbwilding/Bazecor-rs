@@ -1,4 +1,5 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
+use dygma_focus::hardware::{Device, Product};
 use dygma_focus::Focus;
 use rayon::prelude::*;
 
@@ -10,15 +11,22 @@ pub struct Flasher {
 }
 
 impl Flasher {
-    pub fn new() -> Result<Self> {
+    pub fn new(device: &Device) -> Result<Self> {
+        if device.hardware.info.product != Product::Defy {
+            bail!("Unsupported device");
+        }
         Ok(Self {
-            focus: Focus::new_first_available()?, // TODO: Revise passing or doing device check / pass in device
+            focus: Focus::new_via_device(device)?,
         })
+    }
+
+    pub fn flash(&mut self) -> Result<()> {
+        Ok(())
     }
 
     pub async fn write(&mut self, buffer: &[u8]) -> Result<()> {
         for chunk in buffer.chunks(200) {
-            self.focus.dygma_write_bytes(chunk).await?;
+            self.focus.write_bytes(chunk).await?;
         }
 
         Ok(())
