@@ -3,9 +3,9 @@ use dygma_focus::hardware::{Device, Product};
 use dygma_focus::Focus;
 use rayon::prelude::*;
 use std::usize;
+use tracing::trace;
 
-const _MAX_MS: u16 = 2000;
-const _PACKET_SIZE: u16 = 4096;
+const PACKET_SIZE: u16 = 4096;
 
 pub struct Flasher {
     focus: Focus,
@@ -26,7 +26,7 @@ impl Flasher {
         let decoded = Self::ihex_decode_lines(file_content)?;
 
         let mut data_objects = Vec::new();
-        let mut total = 0usize;
+        let mut total = 0;
         let mut segment = 0;
         let mut linear = 0;
         let mut aux_data = Vec::new();
@@ -36,12 +36,12 @@ impl Flasher {
             match hex.record_type {
                 RecordType::Unknown(_) => {}
                 RecordType::ESA => {
-                    segment = u64::from_str_radix(&hex.str[8..8 + hex_length], 16)? * 16;
+                    segment = u32::from_str_radix(&hex.str[8..8 + hex_length], 16)? * 16;
                     linear = 0;
                     continue;
                 }
                 RecordType::ELA => {
-                    linear = u64::from_str_radix(&hex.str[8..8 + hex_length], 16)? * 65536;
+                    linear = u32::from_str_radix(&hex.str[8..8 + hex_length], 16)? * 65536;
                     segment = 0;
                     continue;
                 }
@@ -59,9 +59,82 @@ impl Flasher {
             }
         }
 
-        let _total_saved = total;
-        let _hex_count = 0;
-        let _address = &data_objects[0].address;
+        let mut hex_count = 0;
+        let mut address = data_objects[0].address;
+
+        // ERASE device
+        let s = format!("E{}#", num_to_hex_str(address));
+        trace!("{}", &s);
+        self.write(s.as_bytes()).await?;
+        self.focus.read().await?;
+
+        while total > 0 {
+            let mut buffer_size = {
+                if total > PACKET_SIZE as usize {
+                    PACKET_SIZE as usize
+                } else {
+                    total
+                }
+            };
+
+            let mut buffer = vec![0; buffer_size];
+
+            let mut buffer_total = 0;
+
+            while buffer_total < buffer_size {
+                let current_hex = &data_objects[hex_count];
+
+                if (buffer_size - current_hex.len as usize) < buffer_total {
+                    buffer_size = buffer_total;
+                    buffer = buffer[0..buffer_total].to_vec();
+                    break;
+                }
+
+                buffer[buffer_total..buffer_total + current_hex.len as usize]
+                    .copy_from_slice(&current_hex.data);
+                hex_count += 1;
+                buffer_total += current_hex.len as usize;
+            }
+
+            self.local_write(address, buffer_size as u32, buffer)
+                .await?;
+
+            total -= buffer_size;
+            address += buffer_size as u32;
+        }
+
+        trace!("S#");
+        self.write("S#".as_bytes()).await?;
+
+        trace!("Wait for ACK");
+        self.focus.read().await?;
+
+        Ok(())
+    }
+
+    async fn local_write(
+        &mut self,
+        local_address: u32,
+        local_buffer_size: u32,
+        local_buffer: Vec<u8>,
+    ) -> Result<()> {
+        let s = format!("U{}#", num_to_hex_str(local_buffer_size));
+        trace!("{}", &s);
+        self.write(s.as_bytes()).await?;
+
+        trace!("Writing data...");
+        self.write(&local_buffer).await?;
+
+        let s = format!(
+            "W{},{}#",
+            num_to_hex_str(local_address),
+            num_to_hex_str(local_buffer_size)
+        );
+        trace!("{}", &s);
+        self.write(s.as_bytes()).await?;
+
+        trace!("Wait for ACK");
+        self.focus.read().await?;
 
         Ok(())
     }
@@ -69,7 +142,7 @@ impl Flasher {
     #[tracing::instrument(skip(self, buffer))]
     pub async fn write(&mut self, buffer: &[u8]) -> Result<()> {
         for chunk in buffer.chunks(200) {
-            self.focus.write_bytes(chunk).await?;
+            self.focus.write(chunk).await?;
         }
 
         Ok(())
@@ -106,18 +179,22 @@ impl Flasher {
         Ok(DecodedHex {
             str: line.to_string(),
             len: byte_count,
-            address: address as u64,
+            address: address as u32,
             record_type,
             data: byte_data,
         })
     }
 }
 
+fn num_to_hex_str(address: u32) -> String {
+    format!("{:08x}", address)
+}
+
 #[derive(Debug)]
 pub struct DecodedHex {
     pub str: String,
     pub len: u8,
-    pub address: u64,
+    pub address: u32,
     pub record_type: RecordType,
     pub data: Vec<u8>,
 }

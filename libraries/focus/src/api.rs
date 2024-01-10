@@ -2,7 +2,7 @@ use crate::helpers::*;
 use crate::prelude::*;
 use crate::{Focus, MAX_LAYERS};
 use anyhow::{anyhow, bail, Result};
-use std::str::FromStr;
+use std::str::{from_utf8, FromStr};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::trace;
@@ -10,13 +10,77 @@ use tracing::trace;
 /// Public methods
 impl Focus {
     /// Writes bytes to the serial port.
-    pub async fn write_bytes(&mut self, bytes: &[u8]) -> Result<()> {
+    pub async fn write(&mut self, bytes: &[u8]) -> Result<()> {
         trace!("Writing bytes: {:02X?}", bytes);
+        trace!("Writing text: {:?}", from_utf8(bytes)?);
         let mut stream = self.stream.lock().await;
         stream.write_all(bytes).await?;
         stream.flush().await?;
 
         Ok(())
+    }
+
+    /// Response from serial port
+    pub async fn read(&mut self) -> Result<String> {
+        let eof_marker = b"\r\n.\r\n";
+
+        self.response_buffer.clear();
+
+        loop {
+            let prev_len = self.response_buffer.len();
+            self.response_buffer.resize(prev_len + 1024, 0);
+
+            let mut stream = self.stream.lock().await;
+
+            match stream.read(&mut self.response_buffer[prev_len..]).await {
+                Ok(0) => continue,
+                Ok(size) => {
+                    self.response_buffer.truncate(prev_len + size);
+                    self.response_buffer.retain(|&x| x != 0);
+
+                    trace!("Received bytes: {:02X?}", &self.response_buffer[..size]);
+
+                    if self.response_buffer.ends_with(eof_marker) {
+                        break;
+                    }
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+                Err(e) => bail!("Error reading from serial port: {:?}", e),
+            }
+        }
+
+        while let Some(pos) = self
+            .response_buffer
+            .windows(eof_marker.len())
+            .position(|window| window == eof_marker)
+        {
+            self.response_buffer.drain(pos..pos + eof_marker.len());
+        }
+
+        let start = self
+            .response_buffer
+            .iter()
+            .position(|&b| !b.is_ascii_whitespace())
+            .unwrap_or(0);
+
+        let end = self
+            .response_buffer
+            .iter()
+            .rposition(|&b| !b.is_ascii_whitespace())
+            .map_or(0, |p| p + 1);
+
+        let trimmed_buffer = &self.response_buffer[start..end];
+
+        let response = std::str::from_utf8(trimmed_buffer)
+            .map_err(|e| anyhow!("Failed to convert response to UTF-8 string: {:?}", e))?;
+
+        if !response.is_empty() {
+            trace!("Command RX: {}", &response);
+        } else {
+            trace!("Command RX: [Ack]");
+        }
+
+        Ok(response.to_string())
     }
 
     /// Gets the settings from the device.
@@ -170,14 +234,14 @@ impl Focus {
         trace!("Command TX: {}", command);
 
         if let Some(char) = suffix {
-            self.write_bytes(format!("{}{}", command, char).as_bytes())
+            self.write(format!("{}{}", command, char).as_bytes())
                 .await?;
         } else {
-            self.write_bytes(command.as_bytes()).await?;
+            self.write(command.as_bytes()).await?;
         }
 
         if wait_for_response {
-            let _response = self.response().await?;
+            let _response = self.read().await?;
             // It's not necessary to do anything with the response, but we need to wait for it.
         }
 
@@ -199,7 +263,7 @@ impl Focus {
     async fn command_response_string(&mut self, command: &str) -> Result<String> {
         self.command_new_line(command, false).await?;
 
-        self.response().await
+        self.read().await
     }
 
     /// Sends a command to the device, and returns the response as a numerical value.
@@ -248,69 +312,6 @@ impl Focus {
             .lines()
             .map(|line| line.replace('\r', ""))
             .collect())
-    }
-
-    /// Response from serial port
-    async fn response(&mut self) -> Result<String> {
-        let eof_marker = b"\r\n.\r\n";
-
-        self.response_buffer.clear();
-
-        loop {
-            let prev_len = self.response_buffer.len();
-            self.response_buffer.resize(prev_len + 1024, 0);
-
-            let mut stream = self.stream.lock().await;
-
-            match stream.read(&mut self.response_buffer[prev_len..]).await {
-                Ok(0) => continue,
-                Ok(size) => {
-                    self.response_buffer.truncate(prev_len + size);
-                    self.response_buffer.retain(|&x| x != 0);
-
-                    trace!("Received bytes: {:02X?}", &self.response_buffer[..size]);
-
-                    if self.response_buffer.ends_with(eof_marker) {
-                        break;
-                    }
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
-                Err(e) => bail!("Error reading from serial port: {:?}", e),
-            }
-        }
-
-        while let Some(pos) = self
-            .response_buffer
-            .windows(eof_marker.len())
-            .position(|window| window == eof_marker)
-        {
-            self.response_buffer.drain(pos..pos + eof_marker.len());
-        }
-
-        let start = self
-            .response_buffer
-            .iter()
-            .position(|&b| !b.is_ascii_whitespace())
-            .unwrap_or(0);
-
-        let end = self
-            .response_buffer
-            .iter()
-            .rposition(|&b| !b.is_ascii_whitespace())
-            .map_or(0, |p| p + 1);
-
-        let trimmed_buffer = &self.response_buffer[start..end];
-
-        let response = std::str::from_utf8(trimmed_buffer)
-            .map_err(|e| anyhow!("Failed to convert response to UTF-8 string: {:?}", e))?;
-
-        if !response.is_empty() {
-            trace!("Command RX: {}", &response);
-        } else {
-            trace!("Command RX: [Ack]");
-        }
-
-        Ok(response.to_string())
     }
 }
 
