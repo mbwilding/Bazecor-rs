@@ -24,6 +24,7 @@ impl Flasher {
         Ok(())
     }
 
+    #[tracing::instrument(skip(file_content))]
     pub fn ihex_decode_lines(file_content: &str) -> Result<Vec<DecodedHex>> {
         file_content
             .par_lines()

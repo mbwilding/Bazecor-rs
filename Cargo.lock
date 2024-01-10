@@ -791,6 +791,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -800,10 +801,10 @@ dependencies = [
  "anyhow",
  "bazecor_proc_macros",
  "lazy_static",
- "log",
  "serde",
  "tokio",
  "tokio-serial",
+ "tracing",
 ]
 
 [[package]]
@@ -909,6 +910,7 @@ dependencies = [
  "dygma_api",
  "dygma_focus",
  "inquire",
+ "serde_json",
  "tokio",
  "tracing",
  "tracing-subscriber",

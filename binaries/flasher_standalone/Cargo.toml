@@ -9,6 +9,7 @@ anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 dygma_api = { path = "../../libraries/api" }
 inquire = "0.6"
+serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

@@ -3,6 +3,7 @@ use anyhow::Result;
 use crc32fast::Hasher;
 use rayon::prelude::*;
 
+#[tracing::instrument(skip(firmware))]
 pub fn prepare_chunks(firmware: &FirmwareNode) -> Result<Vec<Vec<u8>>> {
     let data_size = 256;
 

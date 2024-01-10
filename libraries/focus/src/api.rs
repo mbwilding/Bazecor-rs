@@ -2,10 +2,10 @@ use crate::helpers::*;
 use crate::prelude::*;
 use crate::{Focus, MAX_LAYERS};
 use anyhow::{anyhow, bail, Result};
-use log::{debug, trace};
 use std::str::FromStr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tracing::trace;
 
 /// Public methods
 impl Focus {
@@ -20,6 +20,7 @@ impl Focus {
     }
 
     /// Gets the settings from the device.
+    #[tracing::instrument(skip(self))]
     pub async fn dygma_settings_get(&mut self) -> Result<Settings> {
         Ok(Settings {
             keymap_custom: self.keymap_custom_get().await?,
@@ -66,6 +67,7 @@ impl Focus {
     }
 
     /// Sets the settings for the device.
+    #[tracing::instrument(skip(self, settings))]
     pub async fn dygma_settings_set(&mut self, settings: &Settings) -> Result<()> {
         self.keymap_custom_set(&settings.keymap_custom).await?;
         self.keymap_default_set(&settings.keymap_default).await?;
@@ -165,7 +167,7 @@ impl Focus {
         suffix: Option<char>,
         wait_for_response: bool,
     ) -> Result<()> {
-        debug!("Command TX: {}", command);
+        trace!("Command TX: {}", command);
 
         if let Some(char) = suffix {
             self.dygma_write_bytes(format!("{}{}", command, char).as_bytes())
@@ -303,9 +305,9 @@ impl Focus {
             .map_err(|e| anyhow!("Failed to convert response to UTF-8 string: {:?}", e))?;
 
         if !response.is_empty() {
-            debug!("Command RX: {}", &response);
+            trace!("Command RX: {}", &response);
         } else {
-            debug!("Command RX: [Ack]");
+            trace!("Command RX: [Ack]");
         }
 
         Ok(response.to_string())

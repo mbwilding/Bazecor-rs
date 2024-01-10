@@ -1,10 +1,10 @@
 use crate::hardware::Device;
 use anyhow::{anyhow, bail, Result};
-use log::{error, trace};
 use std::str;
 use std::time::Duration;
 use tokio::sync::Mutex;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialPortType, SerialStream};
+use tracing::{error, trace};
 
 pub mod api;
 pub mod color;
@@ -17,6 +17,7 @@ pub mod settings;
 pub const MAX_LAYERS: u8 = 10 - 1;
 
 /// The Dygma Focus API.
+#[derive(Debug)]
 pub struct Focus {
     pub(crate) stream: Mutex<SerialStream>,
     pub(crate) response_buffer: Vec<u8>,
@@ -112,9 +113,7 @@ impl Focus {
         stream.write_data_terminal_ready(true)?;
 
         #[cfg(unix)]
-        stream
-            .set_exclusive(false)
-            .expect("Unable to set serial port exclusive to false");
+        stream.set_exclusive(false)?;
 
         Ok(Self {
             stream: Mutex::new(stream),
