@@ -29,7 +29,6 @@ impl Flasher {
         let mut total = 0;
         let mut segment = 0;
         let mut linear = 0;
-        let mut aux_data = Vec::new();
 
         for mut hex in decoded {
             let hex_length = hex.len as usize * 2;
@@ -38,22 +37,25 @@ impl Flasher {
                 RecordType::ESA => {
                     segment = u32::from_str_radix(&hex.str[8..8 + hex_length], 16)? * 16;
                     linear = 0;
+
                     continue;
                 }
                 RecordType::ELA => {
                     linear = u32::from_str_radix(&hex.str[8..8 + hex_length], 16)? * 65536;
                     segment = 0;
+
                     continue;
                 }
                 RecordType::DAT => {
                     total += hex.len as usize;
+
                     if segment > 0 {
                         hex.address += segment;
                     }
                     if linear > 0 {
                         hex.address += linear;
                     }
-                    aux_data.push(hex.data.clone());
+
                     data_objects.push(hex);
                 }
             }
