@@ -2,7 +2,7 @@ use crate::helpers::*;
 use crate::prelude::*;
 use crate::{Focus, MAX_LAYERS};
 use anyhow::{anyhow, bail, Result};
-use std::str::{from_utf8, FromStr};
+use std::str::FromStr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::trace;
@@ -12,7 +12,7 @@ impl Focus {
     /// Writes bytes to the serial port.
     pub async fn write(&mut self, bytes: &[u8]) -> Result<()> {
         trace!("Writing bytes: {:02X?}", bytes);
-        trace!("Writing text: {:?}", from_utf8(bytes)?);
+        trace!("Writing text: {:?}", std::str::from_utf8(bytes)?);
         let mut stream = self.stream.lock().await;
         stream.write_all(bytes).await?;
         stream.flush().await?;
