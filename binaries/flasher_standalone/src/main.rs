@@ -67,19 +67,16 @@ async fn main() -> Result<()> {
             .await?;
     debug!("Firmware downloaded");
 
-    // Testing firmware hex parse
-    if let Some(hex_raw) = firmwares.firmware.hex_raw {
-        let _hex_decoded =
-            dygma_api::flash::devices::defy::nrf52833_flasher::Flasher::ihex_decode_lines(
-                &hex_raw,
-            )?;
-        debug!("Firmware hex decoded: {} lines", _hex_decoded.len());
-    }
-
     // Testing firmware side chunking
     if let Some(sides) = firmwares.sides {
         let chunks = dygma_api::flash::devices::defy::side_flasher::prepare_chunks(&sides)?;
         debug!("Firmware side chunks prepared: {} chunks", chunks.len());
+    }
+
+    // Testing `Defy flash`
+    if let Some(hex_raw) = firmwares.firmware.hex_raw {
+        let mut flasher = dygma_api::flash::devices::defy::nrf52833_flasher::Flasher::new(&device)?;
+        flasher.flash(&hex_raw).await?;
     }
 
     if cli.debug.unwrap_or(false) {
