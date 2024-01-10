@@ -101,7 +101,7 @@ impl Flasher {
                 buffer_total += current_hex.len as usize;
             }
 
-            self.local_write(address, buffer_size as u32, buffer)
+            self.local_write(address, buffer_size as u32, &buffer)
                 .await?;
 
             total -= buffer_size;
@@ -121,7 +121,7 @@ impl Flasher {
         &mut self,
         local_address: u32,
         local_buffer_size: u32,
-        local_buffer: Vec<u8>,
+        local_buffer: &[u8],
     ) -> Result<()> {
         let s = format!("U{}#", num_to_hex_str(local_buffer_size));
         trace!("{}", &s);
