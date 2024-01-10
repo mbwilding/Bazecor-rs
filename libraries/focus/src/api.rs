@@ -12,7 +12,6 @@ impl Focus {
     /// Writes bytes to the serial port.
     pub async fn write(&mut self, bytes: &[u8]) -> Result<()> {
         trace!("Writing bytes: {:02X?}", bytes);
-        trace!("Writing text: {:?}", std::str::from_utf8(bytes)?);
         let mut stream = self.stream.lock().await;
         stream.write_all(bytes).await?;
         stream.flush().await?;
