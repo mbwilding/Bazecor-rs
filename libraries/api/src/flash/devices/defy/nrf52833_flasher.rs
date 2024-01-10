@@ -15,12 +15,15 @@ impl Flasher {
     pub fn new(device: &Device) -> Result<Self> {
         if device.hardware.info.product != Product::Defy {
             bail!("Unsupported device");
+        } else if device.hardware.bootloader {
+            bail!("Device is in bootloader mode");
         }
         Ok(Self {
             focus: Focus::new_via_device(device)?,
         })
     }
 
+    // TODO: Refactor to reduce allocations
     #[tracing::instrument(skip(self, file_content))]
     pub async fn flash(&mut self, file_content: &str) -> Result<()> {
         let decoded = Self::ihex_decode_lines(file_content)?;

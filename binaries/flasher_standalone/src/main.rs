@@ -68,28 +68,22 @@ async fn main() -> Result<()> {
             .await?;
     debug!("Firmware downloaded");
 
-    // TODO: TESTING
-    if device.hardware.info.product == dygma_focus::hardware::Product::Defy
-        && !device.hardware.bootloader
-    {
-        // Testing firmware side chunking
-        if let Some(sides) = firmwares.sides {
-            let chunks = defy::side_flasher::prepare_chunks(&sides)?;
-            debug!("Firmware side chunks prepared: {} chunks", chunks.len());
-        }
-
-        // Testing `Defy flash`
-        if let Some(hex_raw) = firmwares.firmware.hex_raw {
-            let mut flasher = defy::nrf52833_flasher::Flasher::new(&device)?;
-            flasher.flash(&hex_raw).await?;
-        }
-    }
-
     if cli.debug.unwrap_or(false) {
         return Ok(());
     }
 
-    // TODO: Flash
+    // TODO: TESTING Flash
+    // Testing firmware side chunking
+    if let Some(sides) = firmwares.sides {
+        let chunks = defy::side_flasher::prepare_chunks(&sides)?;
+        debug!("Firmware side chunks prepared: {} chunks", chunks.len());
+    }
+
+    // Testing `Defy flash`
+    if let Some(hex_raw) = firmwares.firmware.hex_raw {
+        let mut flasher = defy::nrf52833_flasher::Flasher::new(&device)?;
+        flasher.flash(&hex_raw).await?;
+    }
 
     Ok(())
 }
