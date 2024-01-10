@@ -68,7 +68,7 @@ impl Flasher {
         let mut address = data_objects[0].address;
 
         // ERASE device
-        let s = format!("E{}#", num_to_hex_str(address));
+        let s = format!("E{}#", num_to_hex(address));
         trace!("{}", &s);
         self.write(s.as_bytes()).await?;
         self.focus.read().await?;
@@ -117,24 +117,15 @@ impl Flasher {
         Ok(())
     }
 
-    async fn local_write(
-        &mut self,
-        local_address: u32,
-        local_buffer_size: u32,
-        local_buffer: &[u8],
-    ) -> Result<()> {
-        let s = format!("U{}#", num_to_hex_str(local_buffer_size));
+    async fn local_write(&mut self, address: u32, buffer_size: u32, buffer: &[u8]) -> Result<()> {
+        let s = format!("U{}#", num_to_hex(buffer_size));
         trace!("{}", &s);
         self.write(s.as_bytes()).await?;
 
         trace!("Writing data...");
-        self.write(&local_buffer).await?;
+        self.write(&buffer).await?;
 
-        let s = format!(
-            "W{},{}#",
-            num_to_hex_str(local_address),
-            num_to_hex_str(local_buffer_size)
-        );
+        let s = format!("W{},{}#", num_to_hex(address), num_to_hex(buffer_size));
         trace!("{}", &s);
         self.write(s.as_bytes()).await?;
 
@@ -191,7 +182,7 @@ impl Flasher {
     }
 }
 
-fn num_to_hex_str(address: u32) -> String {
+fn num_to_hex(address: u32) -> String {
     format!("{:08x}", address)
 }
 

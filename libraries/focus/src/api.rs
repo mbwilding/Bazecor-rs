@@ -297,9 +297,13 @@ impl Focus {
     async fn command_response_bool(&mut self, command: &str) -> Result<bool> {
         let response = self.command_response_string(command).await?;
         if response.is_empty() {
-            bail!("Empty response");
+            bail!("Cannot parse bool: Empty response");
+        } else if response == "0" || response == "false" {
+            Ok(false)
+        } else if response == "1" || response == "true" {
+            Ok(true)
         } else {
-            Ok(response == "1" || response == "true")
+            bail!("Cannot parse bool: {}", response);
         }
     }
 
