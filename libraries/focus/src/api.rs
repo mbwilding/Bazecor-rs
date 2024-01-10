@@ -303,7 +303,7 @@ impl Focus {
         } else if response == "1" || response == "true" {
             Ok(true)
         } else {
-            bail!("Cannot parse bool: {}", response);
+            bail!("Cannot parse bool: '{}'", response);
         }
     }
 
