@@ -1,11 +1,12 @@
 use anyhow::{bail, Result};
 use dygma_focus::hardware::{Device, Product};
 use dygma_focus::Focus;
+use log::info;
 use rayon::prelude::*;
 use std::usize;
 use tracing::trace;
 
-const PACKET_SIZE: u16 = 4096;
+const PACKET_SIZE: usize = 4096;
 
 pub struct Flasher {
     focus: Focus,
@@ -23,12 +24,11 @@ impl Flasher {
         })
     }
 
-    // TODO: Refactor to reduce allocations
     #[tracing::instrument(skip(self, file_content))]
     pub async fn flash(&mut self, file_content: &str) -> Result<()> {
         let decoded = Self::ihex_decode_lines(file_content)?;
 
-        let mut data_objects = Vec::new();
+        let mut decoded_hexes = Vec::new();
         let mut total = 0;
         let mut segment = 0;
         let mut linear = 0;
@@ -59,13 +59,13 @@ impl Flasher {
                         hex.address += linear;
                     }
 
-                    data_objects.push(hex);
+                    decoded_hexes.push(hex);
                 }
             }
         }
 
         let mut hex_count = 0;
-        let mut address = data_objects[0].address;
+        let mut address = decoded_hexes[0].address;
 
         // ERASE device
         let s = format!("E{}#", num_to_hex(address));
@@ -74,38 +74,29 @@ impl Flasher {
         self.focus.read().await?;
 
         while total > 0 {
-            let mut buffer_size = {
-                if total > PACKET_SIZE as usize {
-                    PACKET_SIZE as usize
-                } else {
-                    total
-                }
-            };
+            let buffer_size = std::cmp::min(total, PACKET_SIZE);
 
-            let mut buffer = vec![0; buffer_size];
-
-            let mut buffer_total = 0;
-
-            while buffer_total < buffer_size {
-                let current_hex = &data_objects[hex_count];
-
-                if (buffer_size - current_hex.len as usize) < buffer_total {
-                    buffer_size = buffer_total;
-                    buffer = buffer[0..buffer_total].to_vec();
-                    break;
-                }
-
-                buffer[buffer_total..buffer_total + current_hex.len as usize]
-                    .copy_from_slice(&current_hex.data);
+            let mut accumulated_length = 0;
+            let start_hex_count = hex_count;
+            let decoded_hex_length = decoded_hexes[hex_count].len as usize;
+            while hex_count < decoded_hexes.len()
+                && accumulated_length + decoded_hex_length <= buffer_size
+            {
+                accumulated_length += decoded_hex_length;
                 hex_count += 1;
-                buffer_total += current_hex.len as usize;
             }
 
-            self.local_write(address, buffer_size as u32, &buffer)
-                .await?;
+            if start_hex_count == hex_count {
+                break;
+            }
 
-            total -= buffer_size;
-            address += buffer_size as u32;
+            let data_range = &decoded_hexes[start_hex_count..hex_count];
+            for decoded_hex in data_range {
+                self.local_write(address, decoded_hex).await?;
+
+                address += decoded_hex.len as u32;
+                total -= decoded_hex.len as usize;
+            }
         }
 
         trace!("S#");
@@ -114,18 +105,23 @@ impl Flasher {
         trace!("Wait for ACK");
         self.focus.read().await?;
 
+        info!("Finished flashing");
+
         Ok(())
     }
 
-    async fn local_write(&mut self, address: u32, buffer_size: u32, buffer: &[u8]) -> Result<()> {
-        let s = format!("U{}#", num_to_hex(buffer_size));
+    async fn local_write(&mut self, address: u32, decoded_hex: &DecodedHex) -> Result<()> {
+        let length_as_hex = num_to_hex(decoded_hex.len as u32);
+
+        let s = format!("U{}#", &length_as_hex);
         trace!("{}", &s);
         self.write(s.as_bytes()).await?;
 
-        trace!("Writing data...");
-        self.write(&buffer).await?;
+        trace!("Writing buffer");
+        trace!("Writing bytes: {:02X?}", &decoded_hex.data);
+        self.write(&decoded_hex.data).await?;
 
-        let s = format!("W{},{}#", num_to_hex(address), num_to_hex(buffer_size));
+        let s = format!("W{},{}#", num_to_hex(address), &length_as_hex);
         trace!("{}", &s);
         self.write(s.as_bytes()).await?;
 
