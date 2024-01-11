@@ -10,7 +10,7 @@ use tracing::trace;
 /// Public methods
 impl Focus {
     /// Writes bytes to the serial port.
-    pub async fn write(&mut self, bytes: &[u8]) -> Result<()> {
+    pub async fn write_bytes(&mut self, bytes: &[u8]) -> Result<()> {
         trace!("Writing bytes: {:02X?}", bytes);
         let mut stream = self.stream.lock().await;
         stream.write_all(bytes).await?;
@@ -20,7 +20,7 @@ impl Focus {
     }
 
     /// Response from serial port
-    pub async fn read(&mut self) -> Result<String> {
+    pub async fn read_string(&mut self) -> Result<String> {
         let eof_marker = b"\r\n.\r\n";
 
         self.response_buffer.clear();
@@ -233,14 +233,14 @@ impl Focus {
         trace!("Command TX: {}", command);
 
         if let Some(char) = suffix {
-            self.write(format!("{}{}", command, char).as_bytes())
+            self.write_bytes(format!("{}{}", command, char).as_bytes())
                 .await?;
         } else {
-            self.write(command.as_bytes()).await?;
+            self.write_bytes(command.as_bytes()).await?;
         }
 
         if wait_for_response {
-            let _response = self.read().await?;
+            let _response = self.read_string().await?;
             // It's not necessary to do anything with the response, but we need to wait for it.
         }
 
@@ -262,7 +262,7 @@ impl Focus {
     async fn command_response_string(&mut self, command: &str) -> Result<String> {
         self.command_new_line(command, false).await?;
 
-        self.read().await
+        self.read_string().await
     }
 
     /// Sends a command to the device, and returns the response as a numerical value.

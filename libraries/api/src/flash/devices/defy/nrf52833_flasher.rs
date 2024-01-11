@@ -24,6 +24,7 @@ impl Flasher {
         })
     }
 
+    // TODO: Refactor to reduce allocations
     #[tracing::instrument(skip(self, file_content))]
     pub async fn flash(&mut self, file_content: &str) -> Result<()> {
         let decoded = Self::ihex_decode_lines(file_content)?;
@@ -71,7 +72,7 @@ impl Flasher {
         let s = format!("E{}#", num_to_hex(address));
         trace!("{}", &s);
         self.write(s.as_bytes()).await?;
-        self.focus.read().await?;
+        self.focus.read_string().await?;
 
         while total > 0 {
             let buffer_size = std::cmp::min(total, PACKET_SIZE);
@@ -103,7 +104,7 @@ impl Flasher {
         self.write("S#".as_bytes()).await?;
 
         trace!("Wait for ACK");
-        self.focus.read().await?;
+        self.focus.read_string().await?;
 
         info!("Finished flashing");
 
@@ -126,7 +127,7 @@ impl Flasher {
         self.write(s.as_bytes()).await?;
 
         trace!("Wait for ACK");
-        self.focus.read().await?;
+        self.focus.read_string().await?;
 
         Ok(())
     }
@@ -134,7 +135,7 @@ impl Flasher {
     #[tracing::instrument(skip(self, buffer))]
     pub async fn write(&mut self, buffer: &[u8]) -> Result<()> {
         for chunk in buffer.chunks(200) {
-            self.focus.write(chunk).await?;
+            self.focus.write_bytes(chunk).await?;
         }
 
         Ok(())
