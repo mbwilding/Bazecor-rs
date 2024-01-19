@@ -4,6 +4,4 @@ members = [
     "binaries/bazecor/src-tauri",
     "binaries/flasher_standalone",
     "libraries/api",
-    "libraries/focus",
-    "libraries/proc_macros",
 ]

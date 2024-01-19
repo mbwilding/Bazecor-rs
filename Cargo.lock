@@ -178,14 +178,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bazecor_proc_macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn 2.0.48",
-]
-
-[[package]]
 name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -789,15 +781,27 @@ dependencies = [
 
 [[package]]
 name = "dygma_focus"
-version = "0.1.0"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fcecea91cfded06dec1fb627a0a653fe859c70d7dbf6401820f3ae661e24b52"
 dependencies = [
  "anyhow",
- "bazecor_proc_macros",
+ "dygma_focus_proc_macros",
  "lazy_static",
  "serde",
  "tokio",
  "tokio-serial",
  "tracing",
+]
+
+[[package]]
+name = "dygma_focus_proc_macros"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c22b2457752250712c017d7c31b02852dbc62b73dbafdeebe224657aae5eb3d"
+dependencies = [
+ "quote",
+ "syn 2.0.48",
 ]
 
 [[package]]
